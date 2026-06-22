@@ -34,7 +34,10 @@ export const Route = createFileRoute("/officer")({
   head: () => ({
     meta: [
       { title: "Officer Panel — AgriFarm" },
-      { name: "description", content: "Data Officer portal for recording and managing agricultural crop prices." },
+      {
+        name: "description",
+        content: "Data Officer portal for recording and managing agricultural crop prices.",
+      },
     ],
   }),
   component: OfficerPage,
@@ -122,7 +125,10 @@ function PriceEntryForm() {
   const { data: commodities } = useQuery({
     queryKey: ["commodities-dropdown"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("commodities").select("id, name, unit_of_measure").order("name");
+      const { data, error } = await supabase
+        .from("commodities")
+        .select("id, name, unit_of_measure")
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -138,7 +144,12 @@ function PriceEntryForm() {
   }, [commodities, commodityId]);
 
   const mutation = useMutation({
-    mutationFn: async (payload: { commodityId: string; marketId: string; priceGhs: number; dateRecorded: string }) => {
+    mutationFn: async (payload: {
+      commodityId: string;
+      marketId: string;
+      priceGhs: number;
+      dateRecorded: string;
+    }) => {
       return createPrice(payload);
     },
     onSuccess: () => {
@@ -148,8 +159,9 @@ function PriceEntryForm() {
       queryClient.invalidateQueries({ queryKey: ["dashboard-latest-prices"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-recent-activity"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to create price entry");
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || "Failed to create price entry");
     },
   });
 
@@ -276,18 +288,24 @@ function RecentEntriesTable() {
   const [editDateVal, setEditDateVal] = useState("");
   const [deletingPrice, setDeletingPrice] = useState<PriceRow | null>(null);
 
-  const { data: entries, isLoading, error } = useQuery<PriceRow[]>({
+  const {
+    data: entries,
+    isLoading,
+    error,
+  } = useQuery<PriceRow[]>({
     queryKey: ["officer-recent-prices", user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from("prices")
-        .select("id, price_ghs, date_recorded, commodity:commodities(id,name,unit_of_measure), market:markets(id,name)")
+        .select(
+          "id, price_ghs, date_recorded, commodity:commodities(id,name,unit_of_measure), market:markets(id,name)",
+        )
         .eq("recorded_by", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return (data as any[]) ?? [];
+      return (data as unknown as PriceRow[]) ?? [];
     },
     enabled: !!user,
   });
@@ -303,8 +321,9 @@ function RecentEntriesTable() {
       queryClient.invalidateQueries({ queryKey: ["dashboard-latest-prices"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-recent-activity"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to update price entry");
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || "Failed to update price entry");
     },
   });
 
@@ -319,8 +338,9 @@ function RecentEntriesTable() {
       queryClient.invalidateQueries({ queryKey: ["dashboard-latest-prices"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-recent-activity"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to delete price entry");
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || "Failed to delete price entry");
     },
   });
 
@@ -350,7 +370,9 @@ function RecentEntriesTable() {
       <Card className="border-border/60 shadow-[var(--shadow-card)]">
         <CardHeader>
           <CardTitle className="font-display text-lg">Your Recent Price Entries</CardTitle>
-          <CardDescription>A list of the last 50 prices you've recorded. You can edit or delete them here.</CardDescription>
+          <CardDescription>
+            A list of the last 50 prices you've recorded. You can edit or delete them here.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -358,9 +380,13 @@ function RecentEntriesTable() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : error ? (
-            <p className="text-center py-8 text-sm text-destructive">Failed to load recent prices.</p>
+            <p className="text-center py-8 text-sm text-destructive">
+              Failed to load recent prices.
+            </p>
           ) : !entries?.length ? (
-            <p className="text-center py-12 text-sm text-muted-foreground">You haven't recorded any prices yet.</p>
+            <p className="text-center py-12 text-sm text-muted-foreground">
+              You haven't recorded any prices yet.
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -375,16 +401,25 @@ function RecentEntriesTable() {
                 </thead>
                 <tbody>
                   {entries.map((entry) => (
-                    <tr key={entry.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors">
+                    <tr
+                      key={entry.id}
+                      className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors"
+                    >
                       <td className="py-3 pr-4">
                         <span className="font-medium">{entry.commodity?.name ?? "—"}</span>
-                        <span className="ml-1.5 text-xs text-muted-foreground">/ {entry.commodity?.unit_of_measure}</span>
+                        <span className="ml-1.5 text-xs text-muted-foreground">
+                          / {entry.commodity?.unit_of_measure}
+                        </span>
                       </td>
-                      <td className="py-3 pr-4 text-muted-foreground">{entry.market?.name ?? "—"}</td>
+                      <td className="py-3 pr-4 text-muted-foreground">
+                        {entry.market?.name ?? "—"}
+                      </td>
                       <td className="py-3 pr-4 text-right font-display font-semibold">
                         ₵{Number(entry.price_ghs).toFixed(2)}
                       </td>
-                      <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap">{entry.date_recorded}</td>
+                      <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap">
+                        {entry.date_recorded}
+                      </td>
                       <td className="py-3 text-right whitespace-nowrap">
                         <div className="flex justify-end gap-1.5">
                           <Button
@@ -424,11 +459,15 @@ function RecentEntriesTable() {
           </DialogHeader>
           <form onSubmit={handleUpdateSubmit} className="space-y-4 py-4">
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Commodity</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                Commodity
+              </span>
               <p className="text-sm font-medium">{editingPrice?.commodity?.name}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Market</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                Market
+              </span>
               <p className="text-sm font-medium">{editingPrice?.market?.name}</p>
             </div>
             <div className="space-y-2">
@@ -478,7 +517,10 @@ function RecentEntriesTable() {
       </Dialog>
 
       {/* Delete Confirmation Alert Dialog */}
-      <AlertDialog open={deletingPrice !== null} onOpenChange={(open) => !open && setDeletingPrice(null)}>
+      <AlertDialog
+        open={deletingPrice !== null}
+        onOpenChange={(open) => !open && setDeletingPrice(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Price Entry?</AlertDialogTitle>
@@ -491,7 +533,8 @@ function RecentEntriesTable() {
               <span className="font-semibold text-foreground">
                 {deletingPrice?.commodity?.name}
               </span>{" "}
-              at <span className="font-semibold text-foreground">{deletingPrice?.market?.name}</span>?
+              at{" "}
+              <span className="font-semibold text-foreground">{deletingPrice?.market?.name}</span>?
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

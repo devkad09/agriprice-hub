@@ -23,7 +23,10 @@ import {
 const commoditiesQuery = queryOptions({
   queryKey: ["commodities"],
   queryFn: async () => {
-    const { data, error } = await supabase.from("commodities").select("id, name, category, unit_of_measure").order("name");
+    const { data, error } = await supabase
+      .from("commodities")
+      .select("id, name, category, unit_of_measure")
+      .order("name");
     if (error) throw error;
     return data;
   },
@@ -42,11 +45,17 @@ export const Route = createFileRoute("/prices")({
   head: () => ({
     meta: [
       { title: "Price Charts — AgriFarm" },
-      { name: "description", content: "Interactive price trend charts for Ghanaian agricultural commodities." },
+      {
+        name: "description",
+        content: "Interactive price trend charts for Ghanaian agricultural commodities.",
+      },
     ],
   }),
   loader: ({ context }) =>
-    Promise.all([context.queryClient.ensureQueryData(commoditiesQuery), context.queryClient.ensureQueryData(marketsQuery)]),
+    Promise.all([
+      context.queryClient.ensureQueryData(commoditiesQuery),
+      context.queryClient.ensureQueryData(marketsQuery),
+    ]),
   component: PricesPage,
 });
 
@@ -88,7 +97,9 @@ function PricesContent() {
 
   const [selectedCommodity, setSelectedCommodity] = useState(commodities[0]?.id ?? "");
   const [selectedRange, setSelectedRange] = useState<number>(30);
-  const [enabledMarkets, setEnabledMarkets] = useState<Set<string>>(new Set(markets.map((m) => m.id)));
+  const [enabledMarkets, setEnabledMarkets] = useState<Set<string>>(
+    new Set(markets.map((m) => m.id)),
+  );
 
   const selectedCom = commodities.find((c) => c.id === selectedCommodity);
 
@@ -163,13 +174,18 @@ function PricesContent() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="font-display text-3xl font-bold">Price Charts</h1>
-      <p className="mt-1 text-muted-foreground">Track commodity price trends across Ghana's markets</p>
+      <p className="mt-1 text-muted-foreground">
+        Track commodity price trends across Ghana's markets
+      </p>
 
       {/* Controls */}
       <div className="mt-6 flex flex-wrap items-end gap-4">
         {/* Commodity selector */}
         <div className="space-y-1.5">
-          <label htmlFor="commodity-select" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <label
+            htmlFor="commodity-select"
+            className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+          >
             Commodity
           </label>
           <select
@@ -188,7 +204,9 @@ function PricesContent() {
 
         {/* Date range */}
         <div className="space-y-1.5">
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Range</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Range
+          </span>
           <div className="flex gap-1">
             {RANGES.map((r) => (
               <Button
@@ -216,7 +234,11 @@ function PricesContent() {
                 ? "border-transparent text-white"
                 : "border-border bg-background text-muted-foreground"
             }`}
-            style={enabledMarkets.has(m.id) ? { backgroundColor: CHART_COLORS[i % CHART_COLORS.length] } : undefined}
+            style={
+              enabledMarkets.has(m.id)
+                ? { backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }
+                : undefined
+            }
           >
             {m.name}
           </button>
@@ -263,7 +285,9 @@ function PricesContent() {
                     key={name}
                     type="monotone"
                     dataKey={name}
-                    stroke={CHART_COLORS[markets.findIndex((m) => m.name === name) % CHART_COLORS.length]}
+                    stroke={
+                      CHART_COLORS[markets.findIndex((m) => m.name === name) % CHART_COLORS.length]
+                    }
                     strokeWidth={2}
                     dot={{ r: 3 }}
                     activeDot={{ r: 5 }}
@@ -288,7 +312,11 @@ function PricesContent() {
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={compareData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 130)" />
-                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v: number) => `₵${v}`} />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(v: number) => `₵${v}`}
+                />
                 <YAxis type="category" dataKey="marketName" tick={{ fontSize: 12 }} width={160} />
                 <Tooltip formatter={(value: number) => [`GHS ${value.toFixed(2)}`, "Price"]} />
                 <Bar dataKey="price" radius={[0, 6, 6, 0]}>

@@ -8,17 +8,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, SlidersHorizontal, ArrowUpDown, MapPin, Calendar, Sprout } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  SlidersHorizontal,
+  ArrowUpDown,
+  MapPin,
+  Calendar,
+  Sprout,
+} from "lucide-react";
 
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
       { title: "Search Prices — AgriFarm" },
-      { name: "description", content: "Search and filter crop prices across different markets in Ghana." },
+      {
+        name: "description",
+        content: "Search and filter crop prices across different markets in Ghana.",
+      },
     ],
   }),
   component: SearchPage,
 });
+
+interface PriceItem {
+  id: string;
+  price_ghs: number;
+  date_recorded: string;
+  created_at: string;
+  commodity: { id: string; name: string; unit_of_measure: string; category: string } | null;
+  market: { id: string; name: string; region: string } | null;
+}
 
 function SearchPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,17 +51,20 @@ function SearchPage() {
   const { data: markets } = useQuery({
     queryKey: ["search-markets"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("markets").select("id, name, region").order("name");
+      const { data, error } = await supabase
+        .from("markets")
+        .select("id, name, region")
+        .order("name");
       if (error) throw error;
       return data;
     },
   });
 
-  const { data: priceData, isLoading } = useQuery({
+  const { data: priceData, isLoading } = useQuery<PriceItem[]>({
     queryKey: ["search-prices"],
     queryFn: async () => {
       const res = await listPrices({ limit: 500 });
-      return res.prices ?? [];
+      return (res.prices ?? []) as PriceItem[];
     },
   });
 
@@ -260,7 +283,8 @@ function SearchPage() {
                 <CardContent className="text-center">
                   <p className="text-base text-muted-foreground mb-2">No matching prices found.</p>
                   <p className="text-xs text-muted-foreground/80 max-w-sm mx-auto">
-                    Try adjusting your search keywords, category filters, or selecting a wider date range.
+                    Try adjusting your search keywords, category filters, or selecting a wider date
+                    range.
                   </p>
                 </CardContent>
               </Card>
@@ -271,8 +295,11 @@ function SearchPage() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {filteredAndSortedPrices.map((row: any) => (
-                    <Card key={row.id} className="border-border/60 shadow-[var(--shadow-card)] hover:border-border hover:shadow-md transition-all">
+                  {filteredAndSortedPrices.map((row) => (
+                    <Card
+                      key={row.id}
+                      className="border-border/60 shadow-[var(--shadow-card)] hover:border-border hover:shadow-md transition-all"
+                    >
                       <CardContent className="p-4 flex items-start gap-4">
                         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                           <Sprout className="h-5 w-5" />
@@ -287,7 +314,8 @@ function SearchPage() {
                             </span>
                           </div>
                           <p className="text-xs text-muted-foreground truncate mt-0.5">
-                            Category: {row.commodity?.category} · Unit: {row.commodity?.unit_of_measure}
+                            Category: {row.commodity?.category} · Unit:{" "}
+                            {row.commodity?.unit_of_measure}
                           </p>
 
                           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30 text-xs text-muted-foreground">

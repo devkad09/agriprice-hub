@@ -32,7 +32,10 @@ export const Route = createFileRoute("/subscriptions")({
   head: () => ({
     meta: [
       { title: "SMS Subscriptions — AgriFarm" },
-      { name: "description", content: "Subscribe to daily or weekly SMS alerts for crop price updates." },
+      {
+        name: "description",
+        content: "Subscribe to daily or weekly SMS alerts for crop price updates.",
+      },
     ],
   }),
   component: SubscriptionsPage,
@@ -124,8 +127,9 @@ function PhoneVerificationSection() {
       setIsEditing(false);
       queryClient.invalidateQueries({ queryKey: ["profile-phone", user?.id] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to update phone number");
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || "Failed to update phone number");
     },
   });
 
@@ -174,7 +178,12 @@ function PhoneVerificationSection() {
               />
             </div>
             <div className="flex gap-2">
-              <Button type="submit" size="sm" className="flex-1" disabled={updatePhoneMutation.isPending}>
+              <Button
+                type="submit"
+                size="sm"
+                className="flex-1"
+                disabled={updatePhoneMutation.isPending}
+              >
                 {updatePhoneMutation.isPending ? "Saving..." : "Save"}
               </Button>
               <Button
@@ -194,7 +203,9 @@ function PhoneVerificationSection() {
           <div className="space-y-3">
             <div className="rounded-lg bg-muted/40 p-3 flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground uppercase font-semibold">Active Number</p>
+                <p className="text-xs text-muted-foreground uppercase font-semibold">
+                  Active Number
+                </p>
                 <p className="font-display font-medium text-sm mt-0.5">
                   {hasPhone ? profile.phone : "No phone number set"}
                 </p>
@@ -206,7 +217,12 @@ function PhoneVerificationSection() {
                 You must verify and save your phone number before you can receive SMS alerts.
               </p>
             )}
-            <Button variant="outline" size="sm" className="w-full" onClick={() => setIsEditing(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => setIsEditing(true)}
+            >
               {hasPhone ? "Change Phone Number" : "Set Phone Number"}
             </Button>
           </div>
@@ -224,7 +240,10 @@ function AddSubscriptionForm() {
   const { data: commodities } = useQuery({
     queryKey: ["commodities-for-subs"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("commodities").select("id, name, category").order("name");
+      const { data, error } = await supabase
+        .from("commodities")
+        .select("id, name, category")
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -245,11 +264,12 @@ function AddSubscriptionForm() {
       queryClient.invalidateQueries({ queryKey: ["user-subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["stats-subs"] });
     },
-    onError: (err: any) => {
-      if (err.message?.includes("unique")) {
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("unique")) {
         toast.error("You are already subscribed to this commodity!");
       } else {
-        toast.error(err.message || "Failed to subscribe");
+        toast.error(message || "Failed to subscribe");
       }
     },
   });
@@ -292,7 +312,7 @@ function AddSubscriptionForm() {
             <select
               id="sub-frequency"
               value={frequency}
-              onChange={(e) => setFrequency(e.target.value as any)}
+              onChange={(e) => setFrequency(e.target.value as "daily" | "weekly")}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="daily">Daily price update</option>
@@ -321,11 +341,15 @@ function SubscriptionsList() {
   const queryClient = useQueryClient();
   const [deletingSub, setDeletingSub] = useState<SubscriptionRow | null>(null);
 
-  const { data: subs, isLoading, error } = useQuery<SubscriptionRow[]>({
+  const {
+    data: subs,
+    isLoading,
+    error,
+  } = useQuery<SubscriptionRow[]>({
     queryKey: ["user-subscriptions"],
     queryFn: async () => {
       const res = await listSubscriptions();
-      return (res.subscriptions as any[]) ?? [];
+      return (res.subscriptions as unknown as SubscriptionRow[]) ?? [];
     },
   });
 
@@ -337,8 +361,9 @@ function SubscriptionsList() {
       queryClient.invalidateQueries({ queryKey: ["user-subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["stats-subs"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to update subscription status");
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || "Failed to update subscription status");
     },
   });
 
@@ -352,8 +377,9 @@ function SubscriptionsList() {
       queryClient.invalidateQueries({ queryKey: ["user-subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["stats-subs"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to remove subscription");
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || "Failed to remove subscription");
     },
   });
 
@@ -370,12 +396,15 @@ function SubscriptionsList() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : error ? (
-            <p className="text-center py-8 text-sm text-destructive">Failed to load subscriptions.</p>
+            <p className="text-center py-8 text-sm text-destructive">
+              Failed to load subscriptions.
+            </p>
           ) : !subs?.length ? (
             <div className="text-center py-12">
               <p className="text-sm text-muted-foreground mb-4">You have no active SMS alerts.</p>
               <p className="text-xs text-muted-foreground/80 max-w-sm mx-auto">
-                Subscribe to crop updates using the form on the left to receive regular price updates straight to your phone.
+                Subscribe to crop updates using the form on the left to receive regular price
+                updates straight to your phone.
               </p>
             </div>
           ) : (
@@ -424,7 +453,10 @@ function SubscriptionsList() {
       </Card>
 
       {/* Delete Confirmation Alert */}
-      <AlertDialog open={deletingSub !== null} onOpenChange={(open) => !open && setDeletingSub(null)}>
+      <AlertDialog
+        open={deletingSub !== null}
+        onOpenChange={(open) => !open && setDeletingSub(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Unsubscribe from Alerts?</AlertDialogTitle>

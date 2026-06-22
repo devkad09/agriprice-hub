@@ -17,13 +17,13 @@ AgriFarm is a full-stack web application that delivers **real-time crop prices**
 
 ## 🏪 Markets Covered
 
-| Market | Region |
-|---|---|
-| Makola Market | Greater Accra |
-| Kumasi Central Market | Ashanti |
-| Kejetia Market | Ashanti |
-| Techiman Market | Bono East |
-| Tamale Market | Northern |
+| Market                | Region        |
+| --------------------- | ------------- |
+| Makola Market         | Greater Accra |
+| Kumasi Central Market | Ashanti       |
+| Kejetia Market        | Ashanti       |
+| Techiman Market       | Bono East     |
+| Tamale Market         | Northern      |
 
 ## 🌾 Commodities Tracked (20)
 
@@ -37,16 +37,16 @@ AgriFarm is a full-stack web application that delivers **real-time crop prices**
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Framework** | [TanStack Start](https://tanstack.com/start) (React 19 + SSR) |
-| **Routing** | [TanStack Router](https://tanstack.com/router) |
-| **Data Fetching** | [TanStack Query](https://tanstack.com/query) + Server Functions |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) |
-| **UI Components** | [Radix UI](https://www.radix-ui.com/) + [shadcn/ui](https://ui.shadcn.com/) |
-| **Backend / Auth** | [Supabase](https://supabase.com/) (PostgreSQL, Auth, RLS) |
-| **Build Tool** | [Vite 8](https://vite.dev/) |
-| **Runtime** | [Bun](https://bun.sh/) / Node.js |
+| Layer              | Technology                                                                  |
+| ------------------ | --------------------------------------------------------------------------- |
+| **Framework**      | [TanStack Start](https://tanstack.com/start) (React 19 + SSR)               |
+| **Routing**        | [TanStack Router](https://tanstack.com/router)                              |
+| **Data Fetching**  | [TanStack Query](https://tanstack.com/query) + Server Functions             |
+| **Styling**        | [Tailwind CSS v4](https://tailwindcss.com/)                                 |
+| **UI Components**  | [Radix UI](https://www.radix-ui.com/) + [shadcn/ui](https://ui.shadcn.com/) |
+| **Backend / Auth** | [Supabase](https://supabase.com/) (PostgreSQL, Auth, RLS)                   |
+| **Build Tool**     | [Vite 8](https://vite.dev/)                                                 |
+| **Runtime**        | [Bun](https://bun.sh/) / Node.js                                            |
 
 ---
 
@@ -128,11 +128,11 @@ src/
 
 ## 🔒 User Roles
 
-| Role | Permissions |
-|---|---|
-| **Farmer** | View prices, markets, commodities; manage SMS subscriptions |
-| **Data Officer** | All farmer permissions + create/update/delete prices |
-| **Admin** | Full access including user role management and audit logs |
+| Role             | Permissions                                                 |
+| ---------------- | ----------------------------------------------------------- |
+| **Farmer**       | View prices, markets, commodities; manage SMS subscriptions |
+| **Data Officer** | All farmer permissions + create/update/delete prices        |
+| **Admin**        | Full access including user role management and audit logs   |
 
 New users are automatically assigned the `farmer` role on sign-up.
 
@@ -140,13 +140,13 @@ New users are automatically assigned the `farmer` role on sign-up.
 
 ## 📜 Scripts
 
-| Command | Description |
-|---|---|
-| `bun run dev` | Start development server |
-| `bun run build` | Production build |
-| `bun run preview` | Preview production build |
-| `bun run lint` | Run ESLint |
-| `bun run format` | Format code with Prettier |
+| Command           | Description               |
+| ----------------- | ------------------------- |
+| `bun run dev`     | Start development server  |
+| `bun run build`   | Production build          |
+| `bun run preview` | Preview production build  |
+| `bun run lint`    | Run ESLint                |
+| `bun run format`  | Format code with Prettier |
 
 ---
 

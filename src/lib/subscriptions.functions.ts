@@ -11,7 +11,9 @@ export const listSubscriptions = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data, error } = await supabase
       .from("sms_subscriptions")
-      .select("id, active, frequency, created_at, commodity:commodities(id,name,category,unit_of_measure)")
+      .select(
+        "id, active, frequency, created_at, commodity:commodities(id,name,category,unit_of_measure)",
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);

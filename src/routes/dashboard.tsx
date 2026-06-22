@@ -22,7 +22,10 @@ export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — AgriFarm" },
-      { name: "description", content: "Your AgriFarm dashboard with latest prices, trends, and subscriptions." },
+      {
+        name: "description",
+        content: "Your AgriFarm dashboard with latest prices, trends, and subscriptions.",
+      },
     ],
   }),
   component: DashboardPage,
@@ -79,7 +82,9 @@ function StatsCards() {
   const { data: commodities } = useQuery({
     queryKey: ["stats-commodities"],
     queryFn: async () => {
-      const { count } = await supabase.from("commodities").select("*", { count: "exact", head: true });
+      const { count } = await supabase
+        .from("commodities")
+        .select("*", { count: "exact", head: true });
       return count ?? 0;
     },
   });
@@ -103,9 +108,24 @@ function StatsCards() {
 
   const cards = [
     { label: "Markets", value: markets ?? "—", icon: MapPin, color: "text-blue-600 bg-blue-50" },
-    { label: "Commodities", value: commodities ?? "—", icon: Sprout, color: "text-primary bg-primary/10" },
-    { label: "Price Entries", value: totalPrices ?? "—", icon: BarChart3, color: "text-amber-600 bg-amber-50" },
-    { label: "Active Alerts", value: subs ?? "—", icon: Bell, color: "text-violet-600 bg-violet-50" },
+    {
+      label: "Commodities",
+      value: commodities ?? "—",
+      icon: Sprout,
+      color: "text-primary bg-primary/10",
+    },
+    {
+      label: "Price Entries",
+      value: totalPrices ?? "—",
+      icon: BarChart3,
+      color: "text-amber-600 bg-amber-50",
+    },
+    {
+      label: "Active Alerts",
+      value: subs ?? "—",
+      icon: Bell,
+      color: "text-violet-600 bg-violet-50",
+    },
   ];
 
   return (
@@ -145,7 +165,11 @@ function LatestPricesTable() {
       const seen = new Set<string>();
       const latest = [];
       for (const r of rows ?? []) {
-        const commodity = r.commodity as { name: string; unit_of_measure: string; category: string } | null;
+        const commodity = r.commodity as {
+          name: string;
+          unit_of_measure: string;
+          category: string;
+        } | null;
         const market = r.market as { name: string; region: string } | null;
         if (!commodity || !market) continue;
         const key = `${commodity.name}:${market.name}`;
@@ -190,7 +214,9 @@ function LatestPricesTable() {
                   <tr key={row.id} className="border-b border-border/40 last:border-0">
                     <td className="py-3 pr-4">
                       <span className="font-medium">{row.commodity.name}</span>
-                      <span className="ml-1.5 text-xs text-muted-foreground">/ {row.commodity.unit_of_measure}</span>
+                      <span className="ml-1.5 text-xs text-muted-foreground">
+                        / {row.commodity.unit_of_measure}
+                      </span>
                     </td>
                     <td className="py-3 pr-4 text-muted-foreground">{row.market.name}</td>
                     <td className="py-3 pr-4 text-right font-display font-semibold">
@@ -214,7 +240,9 @@ function RecentActivity() {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("prices")
-        .select("id, price_ghs, date_recorded, created_at, commodity:commodities(name), market:markets(name)")
+        .select(
+          "id, price_ghs, date_recorded, created_at, commodity:commodities(name), market:markets(name)",
+        )
         .order("created_at", { ascending: false })
         .limit(8);
       if (error) throw error;

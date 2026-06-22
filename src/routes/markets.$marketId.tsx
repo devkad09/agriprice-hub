@@ -5,7 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, TrendingUp, TrendingDown, Minus, ArrowLeft, BarChart3, Loader2 } from "lucide-react";
+import {
+  MapPin,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  ArrowLeft,
+  BarChart3,
+  Loader2,
+} from "lucide-react";
 
 export const Route = createFileRoute("/markets/$marketId")({
   head: () => ({
@@ -40,7 +48,11 @@ function MarketContent() {
   const { data: market } = useQuery({
     queryKey: ["market-detail", marketId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("markets").select("*").eq("id", marketId).single();
+      const { data, error } = await supabase
+        .from("markets")
+        .select("*")
+        .eq("id", marketId)
+        .single();
       if (error) throw error;
       return data;
     },
@@ -51,7 +63,9 @@ function MarketContent() {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("prices")
-        .select("id, price_ghs, date_recorded, commodity_id, commodity:commodities(id,name,unit_of_measure,category)")
+        .select(
+          "id, price_ghs, date_recorded, commodity_id, commodity:commodities(id,name,unit_of_measure,category)",
+        )
         .eq("market_id", marketId)
         .order("date_recorded", { ascending: false })
         .order("created_at", { ascending: false })
@@ -75,7 +89,12 @@ function MarketContent() {
       const prevMap = new Map<string, number>();
 
       for (const r of rows ?? []) {
-        const c = r.commodity as { id: string; name: string; unit_of_measure: string; category: string } | null;
+        const c = r.commodity as {
+          id: string;
+          name: string;
+          unit_of_measure: string;
+          category: string;
+        } | null;
         if (!c) continue;
         if (!latestMap.has(c.id)) {
           latestMap.set(c.id, {
@@ -99,7 +118,10 @@ function MarketContent() {
         prevPrice: prevMap.get(item.commodityId) ?? null,
       }));
 
-      return result.sort((a, b) => a.category.localeCompare(b.category) || a.commodityName.localeCompare(b.commodityName));
+      return result.sort(
+        (a, b) =>
+          a.category.localeCompare(b.category) || a.commodityName.localeCompare(b.commodityName),
+      );
     },
   });
 
@@ -129,7 +151,9 @@ function MarketContent() {
         <div>
           <h1 className="font-display text-3xl font-bold">{market.name}</h1>
           <p className="text-muted-foreground">{market.region} Region</p>
-          {market.description && <p className="mt-1 text-sm text-muted-foreground">{market.description}</p>}
+          {market.description && (
+            <p className="mt-1 text-sm text-muted-foreground">{market.description}</p>
+          )}
         </div>
       </div>
 
@@ -160,9 +184,14 @@ function MarketContent() {
                 <tbody>
                   {prices.map((row) => {
                     const change =
-                      row.prevPrice !== null ? ((row.price - row.prevPrice) / row.prevPrice) * 100 : null;
+                      row.prevPrice !== null
+                        ? ((row.price - row.prevPrice) / row.prevPrice) * 100
+                        : null;
                     return (
-                      <tr key={row.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors">
+                      <tr
+                        key={row.id}
+                        className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors"
+                      >
                         <td className="px-6 py-4">
                           <span className="font-medium">{row.commodityName}</span>
                           <span className="ml-1.5 text-xs text-muted-foreground">/ {row.unit}</span>

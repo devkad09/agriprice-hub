@@ -195,7 +195,12 @@ export function SiteHeader() {
                     <UserIcon className="h-4 w-4 text-primary" />
                     <span className="truncate">{user.email}</span>
                   </div>
-                  <Button variant="outline" size="sm" onClick={signOut} className="w-full justify-start">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={signOut}
+                    className="w-full justify-start"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out
                   </Button>
@@ -217,4 +222,3 @@ export function SiteHeader() {
     </header>
   );
 }
-
