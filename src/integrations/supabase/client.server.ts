@@ -4,10 +4,21 @@
 // For user-authenticated queries (with RLS), use the auth middleware instead.
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
+import { mockSupabase } from "./mock-client";
 
 function createSupabaseAdminClient() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const isDefaultOrMock = 
+    !SUPABASE_URL || 
+    SUPABASE_URL.includes("your-project") || 
+    SUPABASE_URL.includes("fbrcnxwypiccqazgyxbz") ||
+    process.env.VITE_USE_MOCK_SUPABASE === "true";
+
+  if (isDefaultOrMock) {
+    return mockSupabase as any;
+  }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     const missing = [
@@ -40,3 +51,4 @@ export const supabaseAdmin = new Proxy({} as ReturnType<typeof createSupabaseAdm
     return Reflect.get(_supabaseAdmin, prop, receiver);
   },
 });
+

@@ -9,11 +9,12 @@ import type { Database } from "@/integrations/supabase/types";
  * Used for read-only price queries that anyone (even logged-out) can run.
  * RLS policies still apply — markets/commodities/prices have "Public read" policies.
  */
+import { supabase } from "@/integrations/supabase/client";
+
 function publicClient() {
-  return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
-    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-  });
+  return supabase;
 }
+
 
 // =========================================================================
 // LIST PRICES (filterable)

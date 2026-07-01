@@ -3,21 +3,18 @@ import { createMiddleware } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
+import { mockSupabase } from "./mock-client";
 
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 
-    if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-      const missing = [
-        ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
-        ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
-      ];
-      const message = `Missing Supabase environment variable(s): ${missing.join(", ")}.`;
-      console.error(`[Supabase] ${message}`);
-      throw new Error(message);
-    }
+    const isDefaultOrMock = 
+      !SUPABASE_URL || 
+      SUPABASE_URL.includes("your-project") || 
+      SUPABASE_URL.includes("fbrcnxwypiccqazgyxbz") ||
+      process.env.VITE_USE_MOCK_SUPABASE === "true";
 
     const request = getRequest();
 
@@ -38,6 +35,30 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
     const token = authHeader.replace("Bearer ", "");
     if (!token) {
       throw new Error("Unauthorized: No token provided");
+    }
+
+    if (isDefaultOrMock) {
+      const { data, error } = await mockSupabase.auth.getClaims(token);
+      if (error || !data?.claims) {
+        throw new Error("Unauthorized: Invalid token");
+      }
+      return next({
+        context: {
+          supabase: mockSupabase as any,
+          userId: data.claims.sub,
+          claims: data.claims,
+        },
+      });
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+      const missing = [
+        ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
+        ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
+      ];
+      const message = `Missing Supabase environment variable(s): ${missing.join(", ")}.`;
+      console.error(`[Supabase] ${message}`);
+      throw new Error(message);
     }
 
     const supabase = createClient<Database>(SUPABASE_URL!, SUPABASE_PUBLISHABLE_KEY!, {
@@ -71,3 +92,4 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
     });
   },
 );
+

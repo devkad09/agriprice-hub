@@ -48,12 +48,26 @@ export const Route = createFileRoute("/admin")({
 // =========================================================================
 // SERVER-SIDE SERVER FUNCTIONS (ADMIN-ONLY BYPASS RLS OPERATIONS)
 // =========================================================================
+import { mockSupabase } from "@/integrations/supabase/mock-client";
+
 function adminClient() {
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const isDefaultOrMock = 
+    !SUPABASE_URL || 
+    SUPABASE_URL.includes("your-project") || 
+    SUPABASE_URL.includes("fbrcnxwypiccqazgyxbz") ||
+    process.env.VITE_USE_MOCK_SUPABASE === "true";
+
+  if (isDefaultOrMock) {
+    return mockSupabase as any;
+  }
+
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
   return createClient<Database>(process.env.SUPABASE_URL!, serviceKey!, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
   });
 }
+
 
 async function ensureAdmin(supabaseClient: SupabaseClient<Database>, userId: string) {
   const { data: isAdmin } = await supabaseClient.rpc("has_role", {
