@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { listPrices } from "@/lib/prices.functions";
-import { SiteHeader } from "@/components/site-header";
+import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,8 +157,7 @@ function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
+    <AppLayout>
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold">Search Prices</h1>
@@ -338,6 +337,6 @@ function SearchPage() {
           </div>
         </div>
       </main>
-    </div>
+    </AppLayout>
   );
 }

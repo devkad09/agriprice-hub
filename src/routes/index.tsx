@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SiteHeader } from "@/components/site-header";
+import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, BarChart3, MapPin, MessageSquareText, Sprout, TrendingUp } from "lucide-react";
@@ -60,8 +60,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
+    <AppLayout fullWidth>
       <Hero />
       <Suspense fallback={null}>
         <Features />
@@ -69,7 +68,7 @@ function Home() {
         <CommoditiesSection />
       </Suspense>
       <Footer />
-    </div>
+    </AppLayout>
   );
 }
 

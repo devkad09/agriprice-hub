@@ -1,35 +1,23 @@
 const path = require("path");
-// Load environment variables from parent directory .env file
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
 const express = require("express");
 const cors = require("cors");
-
-const authRoutes = require("./routes/authRoutes");
-const priceRoutes = require("./routes/priceRoutes");
-const marketRoutes = require("./routes/marketRoutes");
-const commodityRoutes = require("./routes/commodityRoutes");
-const smsRoutes = require("./routes/smsRoutes");
-const adminRoutes = require("./routes/adminRoutes");
+const { query } = require("./config/db");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const requestedPort = Number(process.env.PORT || 5000);
 
-// Enable CORS for all requests, allowing client on 8080 to fetch
-app.use(cors());
-
-// Parse JSON request bodies
+app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
 app.use(express.json());
 
-// Register API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/prices", priceRoutes);
-app.use("/api/markets", marketRoutes);
-app.use("/api/commodities", commodityRoutes);
-app.use("/api/sms", smsRoutes);
-app.use("/api/admin", adminRoutes);
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "AgriFarm API is running",
+  });
+});
 
-// Base health check endpoint
 app.get("/", (req, res) => {
   res.json({
     status: "online",
@@ -38,7 +26,21 @@ app.get("/", (req, res) => {
   });
 });
 
-// Start listening
-app.listen(PORT, () => {
-  console.log(`[AgriBackend] Express server running on port ${PORT}`);
-});
+const startServer = (port) => {
+  const server = app.listen(port, "0.0.0.0", () => {
+    console.log(`[AgriBackend] Express server running on port ${port}`);
+  });
+
+  server.on("error", (error) => {
+    if (error.code === "EADDRINUSE") {
+      console.warn(`[AgriBackend] Port ${port} is busy; trying ${port + 1}`);
+      startServer(port + 1);
+      return;
+    }
+
+    console.error("[AgriBackend] Failed to start server:", error);
+    process.exit(1);
+  });
+};
+
+startServer(requestedPort);

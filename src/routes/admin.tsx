@@ -9,7 +9,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/use-auth";
 import { useRole } from "@/lib/use-role";
-import { SiteHeader } from "@/components/site-header";
+import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -341,8 +341,7 @@ function AdminPage() {
 
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen bg-background">
-        <SiteHeader />
+      <AppLayout>
         <main className="mx-auto max-w-xl px-4 py-20 text-center">
           <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-8 shadow-sm">
             <ShieldAlert className="mx-auto h-12 w-12 text-destructive" />
@@ -355,13 +354,12 @@ function AdminPage() {
             </Button>
           </div>
         </main>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
+    <AppLayout>
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -407,7 +405,7 @@ function AdminPage() {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+    </AppLayout>
   );
 }
 

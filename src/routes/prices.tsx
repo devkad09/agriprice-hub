@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { useState, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SiteHeader } from "@/components/site-header";
+import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -76,8 +76,7 @@ const RANGES = [
 
 function PricesPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
+    <AppLayout fullWidth>
       <Suspense
         fallback={
           <div className="flex justify-center py-20">
@@ -87,7 +86,7 @@ function PricesPage() {
       >
         <PricesContent />
       </Suspense>
-    </div>
+    </AppLayout>
   );
 }
 

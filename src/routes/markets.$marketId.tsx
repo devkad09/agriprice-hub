@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SiteHeader } from "@/components/site-header";
+import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,8 +27,7 @@ export const Route = createFileRoute("/markets/$marketId")({
 
 function MarketDetailPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
+    <AppLayout fullWidth>
       <Suspense
         fallback={
           <div className="flex justify-center py-20">
@@ -38,7 +37,7 @@ function MarketDetailPage() {
       >
         <MarketContent />
       </Suspense>
-    </div>
+    </AppLayout>
   );
 }
 

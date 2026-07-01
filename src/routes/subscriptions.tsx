@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
-import { SiteHeader } from "@/components/site-header";
+import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,8 +62,7 @@ function SubscriptionsPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
+    <AppLayout>
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold">SMS Price Alerts</h1>
@@ -82,7 +81,7 @@ function SubscriptionsPage() {
           </div>
         </div>
       </main>
-    </div>
+    </AppLayout>
   );
 }
 
