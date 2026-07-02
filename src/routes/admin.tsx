@@ -331,6 +331,12 @@ function AdminPage() {
     }
   }, [user, authLoading, navigate]);
 
+  useEffect(() => {
+    if (!authLoading && !roleLoading && user && !isAdmin) {
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [user, authLoading, roleLoading, isAdmin, navigate]);
+
   if (authLoading || roleLoading) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">

@@ -6,7 +6,7 @@ import type { Database } from "./types";
 import { mockSupabase } from "./mock-client";
 
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
-  async ({ next }) => {
+  async ({ next, input }) => {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 
@@ -43,6 +43,7 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
         throw new Error("Unauthorized: Invalid token");
       }
       return next({
+        input,
         context: {
           supabase: mockSupabase as any,
           userId: data.claims.sub,
@@ -84,6 +85,7 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
     }
 
     return next({
+      input,
       context: {
         supabase,
         userId: data.claims.sub,

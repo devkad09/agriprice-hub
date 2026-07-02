@@ -1,27 +1,36 @@
+const { pool } = require("../config/db");
+
 const requireRole = (...roles) => {
   return async (req, res, next) => {
     try {
-      if (!req.user || !req.supabase) {
+      if (!req.user) {
         return res.status(401).json({ error: "Unauthorized: User context missing" });
       }
 
-      // Query database for user's roles
-      const { data: userRoles, error } = await req.supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", req.user.id);
+      const userRoles = Array.isArray(req.user.roles)
+        ? req.user.roles
+        : [];
 
-      if (error || !userRoles) {
-        return res.status(403).json({ error: "Forbidden: Could not resolve user roles" });
+      const hasAllowedRole = userRoles.some((role) => roles.includes(role));
+      if (hasAllowedRole) {
+        return next();
       }
 
-      const activeRoles = userRoles.map((r) => r.role);
-      const hasAllowedRole = activeRoles.some((role) => roles.includes(role));
-
-      if (!hasAllowedRole) {
+      if (!pool) {
         return res.status(403).json({ error: "Forbidden: Insufficient privileges" });
       }
 
+      const result = await pool.query("SELECT role FROM user_roles WHERE user_id = $1", [
+        req.user.id,
+      ]);
+      const activeRoles = result.rows.map((r) => r.role);
+      const allow = activeRoles.some((role) => roles.includes(role));
+
+      if (!allow) {
+        return res.status(403).json({ error: "Forbidden: Insufficient privileges" });
+      }
+
+      req.user.roles = activeRoles;
       next();
     } catch (err) {
       console.error("Role middleware error:", err);

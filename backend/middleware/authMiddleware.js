@@ -1,45 +1,33 @@
-const { createClient } = require("@supabase/supabase-js");
+const jwt = require("jsonwebtoken");
 
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Unauthorized: Missing or invalid token" });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Missing or invalid token",
+        error: "No token provided",
+      });
     }
+
     const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "agrifarm-dev-secret");
 
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PUBLISHABLE_KEY) {
-      return res
-        .status(500)
-        .json({ error: "Backend configuration error: missing Supabase credentials" });
-    }
-
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
-
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
-    if (error || !user) {
-      return res.status(401).json({ error: "Unauthorized: Invalid session token" });
-    }
-
-    req.user = user;
-    req.supabase = supabase;
+    req.user = decoded;
     next();
   } catch (err) {
-    console.error("Auth middleware error:", err);
-    return res.status(401).json({ error: "Unauthorized: Auth processing failed" });
+    console.error("[Auth] Token verification failed:", err.message);
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: Invalid or expired token",
+      error: err.message,
+    });
+  }
+};
+
+module.exports = authMiddleware;
+
   }
 };
 

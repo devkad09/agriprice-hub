@@ -150,7 +150,46 @@ New users are automatically assigned the `farmer` role on sign-up.
 
 ---
 
-## 📄 License
+## � Deployment
+
+### Frontend on Vercel
+
+1. Create a new Vercel project from this repository root.
+2. Set the install command to `npm install` and the build command to `npm run build`.
+3. Set the output directory to `dist` if Vercel asks for one.
+4. Add these environment variables:
+   - `SUPABASE_URL`
+   - `SUPABASE_PUBLISHABLE_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+   - `VITE_USE_MOCK_SUPABASE=false`
+   - `JWT_SECRET` (optional, if custom server functions depend on it)
+5. Deploy and verify the app loads and authentication works.
+
+> Note: the current frontend is primarily wired to Supabase auth/data, so Vercel should serve the TanStack Start app with those keys available.
+
+### Backend on Railway
+
+1. Create a Railway project and connect it to the `backend/` folder in this repo.
+2. Use the service's `start` command: `npm start`.
+3. Add the following environment variables on Railway:
+   - `DATABASE_URL`
+   - `JWT_SECRET`
+   - `CLIENT_URL` (your Vercel frontend URL)
+   - `AT_USERNAME` (Africa's Talking username)
+   - `AT_API_KEY` (Africa's Talking API key)
+4. If you use Railway Postgres for the app database, apply the SQL schema from `backend/models/schema.sql` and seed data from `backend/models/seed.sql`.
+
+### Why this split
+
+- `backend/` runs as a standalone Express API on Railway.
+- The root app runs as the frontend SSR site on Vercel.
+- If you want the frontend to call the Express API instead of Supabase, add a `BACKEND_URL` environment variable and migrate API calls accordingly.
+
+---
+
+## �📄 License
 
 This project was developed as a Final Year Project at **Accra Technical University** by **Group 39**.
 

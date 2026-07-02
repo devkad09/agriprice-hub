@@ -24,10 +24,16 @@ if (apiKey) {
 async function sendSMS(phoneNumber, message) {
   try {
     if (atSMS) {
-      const response = await atSMS.send({
+      const payload = {
         to: [phoneNumber],
         message: message,
-      });
+      };
+
+      if (process.env.AT_SENDER_ID) {
+        payload.from = process.env.AT_SENDER_ID;
+      }
+
+      const response = await atSMS.send(payload);
       console.log(`[AgriBackend] SMS sent to ${phoneNumber}:`, response);
       return response;
     } else {

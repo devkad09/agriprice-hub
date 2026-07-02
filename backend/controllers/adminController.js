@@ -6,11 +6,12 @@ exports.getAllUsers = async (req, res) => {
   try {
     if (pool) {
       const sql = `
-        SELECT p.id, p.full_name, p.phone, p.region, p.created_at,
+        SELECT p.id, u.email, p.full_name, p.phone, p.region, p.created_at,
                COALESCE(json_agg(ur.role) FILTER (WHERE ur.role IS NOT NULL), '[]'::json) as roles
         FROM profiles p
+        JOIN users u ON u.id = p.id
         LEFT JOIN user_roles ur ON p.id = ur.user_id
-        GROUP BY p.id, p.full_name, p.phone, p.region, p.created_at
+        GROUP BY p.id, u.email, p.full_name, p.phone, p.region, p.created_at
         ORDER BY p.created_at DESC
       `;
       const result = await pool.query(sql);
@@ -22,8 +23,13 @@ exports.getAllUsers = async (req, res) => {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
+      const { data: users, error: usersErr } = await supabase.from("users").select("id, email");
+      if (usersErr) throw usersErr;
+      const emailMap = new Map((users ?? []).map((u) => [u.id, u.email]));
+
       const formatted = data.map((u) => ({
         id: u.id,
+        email: emailMap.get(u.id) || null,
         full_name: u.full_name,
         phone: u.phone,
         region: u.region,
@@ -108,7 +114,8 @@ exports.bulkImportPrices = async (req, res) => {
             errors.push({
               index: i,
               row,
-              error: "Missing required columns (market_id, commodity_id, price_ghc)",
+              error:
+                "Missing required fields (market_id, commodity_id, price_ghs or price_ghc). Please include these columns.",
             });
             continue;
           }

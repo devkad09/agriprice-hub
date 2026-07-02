@@ -1,0 +1,23 @@
+{
+  "project": {
+    "name": "agrifarm"
+  },
+  "services": [
+    {
+      "name": "api",
+      "path": "backend",
+      "type": "static",
+      "build": {
+        "builder": "node"
+      },
+      "startCommand": "npm start",
+      "env": {
+        "DATABASE_URL": "@database_url",
+        "JWT_SECRET": "@jwt_secret",
+        "CLIENT_URL": "@client_url",
+        "AT_USERNAME": "@at_username",
+        "AT_API_KEY": "@at_api_key"
+      }
+    }
+  ]
+}
