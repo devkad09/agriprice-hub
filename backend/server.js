@@ -11,6 +11,21 @@ const requestedPort = Number(process.env.PORT || 5000);
 app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
 app.use(express.json());
 
+// Register API routes
+const authRoutes = require("./routes/authRoutes");
+const priceRoutes = require("./routes/priceRoutes");
+const marketRoutes = require("./routes/marketRoutes");
+const commodityRoutes = require("./routes/commodityRoutes");
+const smsRoutes = require("./routes/smsRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/prices", priceRoutes);
+app.use("/api/markets", marketRoutes);
+app.use("/api/commodities", commodityRoutes);
+app.use("/api/sms", smsRoutes);
+app.use("/api/admin", adminRoutes);
+
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,

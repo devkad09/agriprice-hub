@@ -1,4 +1,21 @@
-# AgriFarm — User Acceptance Testing (UAT) Report
+# start local Postgres
+docker run --name agrifarm-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=agrifarm -p 5432:5432 -d postgres:15
+
+# create root .env with DATABASE_URL (server reads ../.env)
+cat > .env <<EOF
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/agrifarm
+JWT_SECRET=agrifarm-dev-secret
+JWT_EXPIRES_IN=7d
+PORT=5000
+CLIENT_URL=http://localhost:8081
+EOF
+
+# run schema and seed
+psql "$DATABASE_URL" -f backend/models/schema.sql
+psql "$DATABASE_URL" -f backend/models/seed.sql
+
+# restart backend
+cd backend && npm run dev# AgriFarm — User Acceptance Testing (UAT) Report
 
 **Project:** AgriFarm — Live Market Prices for Ghanaian Farmers  
 **Date:** July 2, 2026  
