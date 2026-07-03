@@ -79,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Track real-time crop prices across Ghana's major markets. Get SMS price alerts for tomatoes, yam, maize and more.",
+          "Track real-time crop prices across Ghana's major markets. Get SMS price alerts for vegetables, tomatoes, yam, maize and more.",
       },
       { property: "og:title", content: "AgriFarm — Live Market Prices for Ghanaian Farmers" },
       {
