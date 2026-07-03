@@ -1,27 +1,69 @@
 import { useEffect, useState } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 
 export type AppRole = "farmer" | "data_officer" | "admin";
 
+export const AUTH_TOKEN_KEY = "AGRIFARM_AUTH_TOKEN";
+
+type BackendUser = {
+  user_id: string;
+  name: string;
+  email: string;
+  role: AppRole;
+  phone?: string | null;
+  region?: string | null;
+  created_at?: string;
+};
+
+export type AuthSession = {
+  access_token: string;
+  user: BackendUser;
+};
+
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [user, setUser] = useState<BackendUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  async function loadProfile(token: string) {
+    try {
+      const response = await fetch("/api/auth/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        setSession(null);
+        setUser(null);
+        return;
+      }
+      const json = await response.json();
+      setSession({ access_token: token, user: json.data });
+      setUser(json.data);
+    } catch (error) {
+      console.error("Failed to load auth profile", error);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      setSession(null);
+      setUser(null);
+    }
+  }
+
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
       setLoading(false);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
-    return () => sub.subscription.unsubscribe();
+      return;
+    }
+
+    loadProfile(token).finally(() => setLoading(false));
   }, []);
 
-  return { session, user, loading };
+  const signOut = () => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    setSession(null);
+    setUser(null);
+  };
+
+  return { session, user, loading, signOut };
 }

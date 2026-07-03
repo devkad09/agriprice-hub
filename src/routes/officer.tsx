@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { useRole } from "@/lib/use-role";
 import { AppLayout } from "@/components/app-layout";
@@ -9,7 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createPrice, updatePrice, deletePrice } from "@/lib/prices.functions";
+import {
+  listMarkets,
+  listCommodities,
+  getPrices,
+  addPrice,
+  updatePrice,
+  deletePrice,
+} from "@/lib/backend-prices";
 import {
   Dialog,
   DialogContent,
@@ -114,21 +120,14 @@ function PriceEntryForm() {
   const { data: markets } = useQuery({
     queryKey: ["markets-dropdown"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("markets").select("id, name").order("name");
-      if (error) throw error;
-      return data;
+      return listMarkets();
     },
   });
 
   const { data: commodities } = useQuery({
     queryKey: ["commodities-dropdown"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("commodities")
-        .select("id, name, unit_of_measure")
-        .order("name");
-      if (error) throw error;
-      return data;
+      return listCommodities();
     },
   });
 
@@ -148,7 +147,7 @@ function PriceEntryForm() {
       priceGhs: number;
       dateRecorded: string;
     }) => {
-      return createPrice(payload);
+      return addPrice(payload);
     },
     onSuccess: () => {
       toast.success("Price entry created successfully!");
@@ -291,19 +290,10 @@ function RecentEntriesTable() {
     isLoading,
     error,
   } = useQuery<PriceRow[]>({
-    queryKey: ["officer-recent-prices", user?.id],
+    queryKey: ["officer-recent-prices", user?.user_id],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from("prices")
-        .select(
-          "id, price_ghs, date_recorded, commodity:commodities(id,name,unit_of_measure), market:markets(id,name)",
-        )
-        .eq("recorded_by", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return (data as unknown as PriceRow[]) ?? [];
+      return getPrices({ recordedBy: user.user_id, limit: 50 });
     },
     enabled: !!user,
   });
@@ -327,7 +317,7 @@ function RecentEntriesTable() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return deletePrice({ id });
+      return deletePrice(id);
     },
     onSuccess: () => {
       toast.success("Price entry deleted.");

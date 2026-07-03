@@ -14,7 +14,13 @@ const authMiddleware = (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "agrifarm-dev-secret");
 
-    req.user = decoded;
+    const normalizedUser = {
+      ...decoded,
+      id: decoded.user_id || decoded.userId || decoded.id,
+      user_id: decoded.user_id || decoded.userId || decoded.id,
+    };
+
+    req.user = normalizedUser;
     next();
   } catch (err) {
     console.error("[Auth] Token verification failed:", err.message);

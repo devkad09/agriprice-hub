@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./use-auth";
-import type { Database } from "@/integrations/supabase/types";
-
-export type AppRole = Database["public"]["Enums"]["app_role"];
+import { useAuth, AppRole } from "./use-auth";
 
 export function useRole() {
   const { user, loading: authLoading } = useAuth();
@@ -18,14 +14,8 @@ export function useRole() {
       return;
     }
 
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .then(({ data }) => {
-        setRoles((data ?? []).map((r) => r.role));
-        setLoading(false);
-      });
+    setRoles(user.role ? [user.role] : []);
+    setLoading(false);
   }, [user, authLoading]);
 
   return {

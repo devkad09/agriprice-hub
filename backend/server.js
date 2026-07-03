@@ -1,5 +1,5 @@
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const express = require("express");
 const cors = require("cors");
@@ -8,7 +8,12 @@ const { query } = require("./config/db");
 const app = express();
 const requestedPort = Number(process.env.PORT || 5000);
 
-app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
+const clientOrigin = process.env.CLIENT_URL || "http://localhost:8080";
+const corsOptions = {
+  origin: process.env.NODE_ENV !== "production" ? true : clientOrigin,
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Register API routes

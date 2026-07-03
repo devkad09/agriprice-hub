@@ -28,21 +28,26 @@ exports.getAllPrices = async (req, res) => {
         sql += ` AND p.date_recorded = $${paramIndex++}`;
         params.push(date);
       }
+      if (req.query.recorded_by) {
+        sql += ` AND p.recorded_by = $${paramIndex++}`;
+        params.push(req.query.recorded_by);
+      }
 
-      sql += ` ORDER BY p.date_recorded DESC, p.created_at DESC`;
+      sql += ` ORDER BY p.date_recorded DESC`;
       const result = await pool.query(sql, params);
       return res.json(result.rows);
     } else {
       let q = supabase
         .from("prices")
         .select(
-          "id, price_ghs, date_recorded, created_by:recorded_by, commodity:commodities(id,name,category,unit_of_measure), market:markets(id,name,region)",
+          "id, price_ghs, date_recorded, recorded_by, commodity:commodities(id,name,category,unit_of_measure), market:markets(id,name,region)",
         )
         .order("date_recorded", { ascending: false });
 
       if (market_id) q = q.eq("market_id", market_id);
       if (commodity_id) q = q.eq("commodity_id", commodity_id);
       if (date) q = q.eq("date_recorded", date);
+      if (req.query.recorded_by) q = q.eq("recorded_by", req.query.recorded_by);
 
       const { data, error } = await q;
       if (error) throw error;

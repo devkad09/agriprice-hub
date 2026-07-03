@@ -1,9 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { Sprout, LogOut, User as UserIcon, Menu, X } from "lucide-react";
+import { Sprout, LogOut, User as UserIcon, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/use-auth";
 import { useRole } from "@/lib/use-role";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
@@ -19,7 +25,7 @@ export function SiteHeader() {
     setMobileMenuOpen(false);
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
+    localStorage.removeItem("AGRIFARM_AUTH_TOKEN");
     router.navigate({ to: "/auth", replace: true });
   }
 
@@ -82,13 +88,32 @@ export function SiteHeader() {
             </Link>
           )}
           {user && canEditPrices && (
-            <Link
-              to="/officer"
-              className="text-primary hover:text-primary/95 transition-colors font-medium"
-              activeProps={{ className: "font-semibold underline underline-offset-4" }}
-            >
-              Officer Panel
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="inline-flex items-center gap-2 text-primary hover:text-primary/95 transition-colors font-medium"
+                  aria-expanded={false}
+                >
+                  Officer Panel
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem asChild>
+                  <Link to="/officer">Overview</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/officer/add-price">Add Price</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/officer/manage-prices">Manage Prices</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </nav>
 
@@ -177,14 +202,30 @@ export function SiteHeader() {
               </Link>
             )}
             {user && canEditPrices && (
-              <Link
-                to="/officer"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-primary hover:text-primary/95 font-medium"
-                activeProps={{ className: "font-semibold" }}
-              >
-                Officer Panel
-              </Link>
+              <>
+                <Link
+                  to="/officer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-1 text-primary hover:text-primary/95 font-medium"
+                  activeProps={{ className: "font-semibold" }}
+                >
+                  Officer Panel
+                </Link>
+                <Link
+                  to="/officer/add-price"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="pl-4 py-1 text-muted-foreground hover:text-foreground text-sm"
+                >
+                  Add Price
+                </Link>
+                <Link
+                  to="/officer/manage-prices"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="pl-4 py-1 text-muted-foreground hover:text-foreground text-sm"
+                >
+                  Manage Prices
+                </Link>
+              </>
             )}
 
             {/* Mobile Auth Button */}

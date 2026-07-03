@@ -17,6 +17,8 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OfficerManagePricesRouteImport } from './routes/officer.manage-prices'
+import { Route as OfficerAddPriceRouteImport } from './routes/officer.add-price'
 import { Route as MarketsMarketIdRouteImport } from './routes/markets.$marketId'
 
 const SubscriptionsRoute = SubscriptionsRouteImport.update({
@@ -59,6 +61,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OfficerManagePricesRoute = OfficerManagePricesRouteImport.update({
+  id: '/manage-prices',
+  path: '/manage-prices',
+  getParentRoute: () => OfficerRoute,
+} as any)
+const OfficerAddPriceRoute = OfficerAddPriceRouteImport.update({
+  id: '/add-price',
+  path: '/add-price',
+  getParentRoute: () => OfficerRoute,
+} as any)
 const MarketsMarketIdRoute = MarketsMarketIdRouteImport.update({
   id: '/markets/$marketId',
   path: '/markets/$marketId',
@@ -70,22 +82,26 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
-  '/officer': typeof OfficerRoute
+  '/officer': typeof OfficerRouteWithChildren
   '/prices': typeof PricesRoute
   '/search': typeof SearchRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/markets/$marketId': typeof MarketsMarketIdRoute
+  '/officer/add-price': typeof OfficerAddPriceRoute
+  '/officer/manage-prices': typeof OfficerManagePricesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
-  '/officer': typeof OfficerRoute
+  '/officer': typeof OfficerRouteWithChildren
   '/prices': typeof PricesRoute
   '/search': typeof SearchRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/markets/$marketId': typeof MarketsMarketIdRoute
+  '/officer/add-price': typeof OfficerAddPriceRoute
+  '/officer/manage-prices': typeof OfficerManagePricesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -93,11 +109,13 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
-  '/officer': typeof OfficerRoute
+  '/officer': typeof OfficerRouteWithChildren
   '/prices': typeof PricesRoute
   '/search': typeof SearchRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/markets/$marketId': typeof MarketsMarketIdRoute
+  '/officer/add-price': typeof OfficerAddPriceRoute
+  '/officer/manage-prices': typeof OfficerManagePricesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +129,8 @@ export interface FileRouteTypes {
     | '/search'
     | '/subscriptions'
     | '/markets/$marketId'
+    | '/officer/add-price'
+    | '/officer/manage-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +142,8 @@ export interface FileRouteTypes {
     | '/search'
     | '/subscriptions'
     | '/markets/$marketId'
+    | '/officer/add-price'
+    | '/officer/manage-prices'
   id:
     | '__root__'
     | '/'
@@ -133,6 +155,8 @@ export interface FileRouteTypes {
     | '/search'
     | '/subscriptions'
     | '/markets/$marketId'
+    | '/officer/add-price'
+    | '/officer/manage-prices'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,7 +164,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
-  OfficerRoute: typeof OfficerRoute
+  OfficerRoute: typeof OfficerRouteWithChildren
   PricesRoute: typeof PricesRoute
   SearchRoute: typeof SearchRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
@@ -205,6 +229,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/officer/manage-prices': {
+      id: '/officer/manage-prices'
+      path: '/manage-prices'
+      fullPath: '/officer/manage-prices'
+      preLoaderRoute: typeof OfficerManagePricesRouteImport
+      parentRoute: typeof OfficerRoute
+    }
+    '/officer/add-price': {
+      id: '/officer/add-price'
+      path: '/add-price'
+      fullPath: '/officer/add-price'
+      preLoaderRoute: typeof OfficerAddPriceRouteImport
+      parentRoute: typeof OfficerRoute
+    }
     '/markets/$marketId': {
       id: '/markets/$marketId'
       path: '/markets/$marketId'
@@ -215,12 +253,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface OfficerRouteChildren {
+  OfficerAddPriceRoute: typeof OfficerAddPriceRoute
+  OfficerManagePricesRoute: typeof OfficerManagePricesRoute
+}
+
+const OfficerRouteChildren: OfficerRouteChildren = {
+  OfficerAddPriceRoute: OfficerAddPriceRoute,
+  OfficerManagePricesRoute: OfficerManagePricesRoute,
+}
+
+const OfficerRouteWithChildren =
+  OfficerRoute._addFileChildren(OfficerRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
-  OfficerRoute: OfficerRoute,
+  OfficerRoute: OfficerRouteWithChildren,
   PricesRoute: PricesRoute,
   SearchRoute: SearchRoute,
   SubscriptionsRoute: SubscriptionsRoute,
