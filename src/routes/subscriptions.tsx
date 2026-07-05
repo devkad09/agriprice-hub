@@ -1,20 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
+import { listCommodities } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  listSubscriptions,
-  createSubscription,
-  toggleSubscription,
-  deleteSubscription,
-} from "@/lib/subscriptions.functions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,13 +89,13 @@ function PhoneVerificationSection() {
     queryKey: ["profile-phone", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("phone")
-        .eq("id", user.id)
-        .single();
-      if (error) throw error;
-      return data;
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/auth/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const json = await res.json();
+      return json.data;
     },
     enabled: !!user,
   });
@@ -114,11 +108,19 @@ function PhoneVerificationSection() {
 
   const updatePhoneMutation = useMutation({
     mutationFn: async (newPhone: string) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ phone: newPhone })
-        .eq("id", user!.id);
-      if (error) throw error;
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ phone: newPhone }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update phone number");
+      }
       return newPhone;
     },
     onSuccess: () => {
@@ -232,6 +234,7 @@ function PhoneVerificationSection() {
 }
 
 function AddSubscriptionForm() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [commodityId, setCommodityId] = useState("");
   const [frequency, setFrequency] = useState<"daily" | "weekly">("daily");
@@ -239,13 +242,13 @@ function AddSubscriptionForm() {
   const { data: commodities } = useQuery({
     queryKey: ["commodities-for-subs"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("commodities")
-        .select("id, name, category")
-        .order("name");
-      if (error) throw error;
-      return data;
+      return listCommodities();
     },
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile-phone", user?.id],
+    enabled: false,
   });
 
   useEffect(() => {
@@ -256,20 +259,36 @@ function AddSubscriptionForm() {
 
   const addMutation = useMutation({
     mutationFn: async (payload: { commodityId: string; frequency: "daily" | "weekly" }) => {
-      return createSubscription(payload);
+      if (!profile?.phone) {
+        throw new Error("Please set your phone number first.");
+      }
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/sms/subscribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phone: profile.phone,
+          commodity_id: payload.commodityId,
+          frequency: payload.frequency,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || err.error || "Failed to subscribe");
+      }
+      return res.json();
     },
     onSuccess: () => {
       toast.success("Subscribed to price alerts!");
       queryClient.invalidateQueries({ queryKey: ["user-subscriptions"] });
-      queryClient.invalidateQueries({ queryKey: ["stats-subs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
-      if (message.includes("unique")) {
-        toast.error("You are already subscribed to this commodity!");
-      } else {
-        toast.error(message || "Failed to subscribe");
-      }
+      toast.error(message || "Failed to subscribe");
     },
   });
 
@@ -337,8 +356,14 @@ interface SubscriptionRow {
 }
 
 function SubscriptionsList() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [deletingSub, setDeletingSub] = useState<SubscriptionRow | null>(null);
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile-phone", user?.id],
+    enabled: false,
+  });
 
   const {
     data: subs,
@@ -347,18 +372,58 @@ function SubscriptionsList() {
   } = useQuery<SubscriptionRow[]>({
     queryKey: ["user-subscriptions"],
     queryFn: async () => {
-      const res = await listSubscriptions();
-      return (res.subscriptions as unknown as SubscriptionRow[]) ?? [];
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/sms/subscriptions", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch subscriptions");
+      return res.json();
     },
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async (payload: { id: string; active: boolean }) => {
-      return toggleSubscription(payload);
+    mutationFn: async (payload: { id: string; commodityId: string; active: boolean; frequency: string }) => {
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      if (payload.active) {
+        if (!profile?.phone) {
+          throw new Error("Please set your phone number first.");
+        }
+        const res = await fetch("/api/sms/subscribe", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            phone: profile.phone,
+            commodity_id: payload.commodityId,
+            frequency: payload.frequency,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || err.error || "Failed to activate subscription");
+        }
+      } else {
+        const res = await fetch("/api/sms/unsubscribe", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            commodity_id: payload.commodityId,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || err.error || "Failed to pause subscription");
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-subscriptions"] });
-      queryClient.invalidateQueries({ queryKey: ["stats-subs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
@@ -367,14 +432,28 @@ function SubscriptionsList() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return deleteSubscription({ id });
+    mutationFn: async (commodityId: string) => {
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/sms/unsubscribe", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          commodity_id: commodityId,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || err.error || "Failed to unsubscribe");
+      }
     },
     onSuccess: () => {
       toast.success("Subscription removed.");
       setDeletingSub(null);
       queryClient.invalidateQueries({ queryKey: ["user-subscriptions"] });
-      queryClient.invalidateQueries({ queryKey: ["stats-subs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
@@ -430,7 +509,12 @@ function SubscriptionsList() {
                       <Switch
                         checked={sub.active}
                         onCheckedChange={(checked) =>
-                          toggleMutation.mutate({ id: sub.id, active: checked })
+                          toggleMutation.mutate({
+                            id: sub.id,
+                            commodityId: sub.commodity?.id ?? "",
+                            active: checked,
+                            frequency: sub.frequency,
+                          })
                         }
                       />
                     </div>
@@ -468,7 +552,7 @@ function SubscriptionsList() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deletingSub && deleteMutation.mutate(deletingSub.id)}
+              onClick={() => deletingSub?.commodity && deleteMutation.mutate(deletingSub.commodity.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteMutation.isPending}
             >

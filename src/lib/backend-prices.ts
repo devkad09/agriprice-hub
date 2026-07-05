@@ -23,13 +23,20 @@ function buildHeaders(options: BackendFetchOptions = {}) {
 }
 
 async function fetchJson<T>(path: string, options: BackendFetchOptions = {}): Promise<T> {
+  const baseUrl = typeof window === "undefined"
+    ? (process.env.VITE_BACKEND_URL || "http://localhost:5001")
+    : "";
+  const absoluteUrl = path.startsWith("http") ? path : `${baseUrl}${path}`;
+
+  console.log(`[fetchJson] typeof window: ${typeof window}, path: ${path}, baseUrl: "${baseUrl}", absoluteUrl: "${absoluteUrl}"`);
+
   const init: RequestInit = {
     ...options,
     headers: buildHeaders(options),
     body: options.body instanceof FormData ? options.body : options.body ? JSON.stringify(options.body) : undefined,
   };
 
-  const response = await fetch(path, init);
+  const response = await fetch(absoluteUrl, init);
 
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;

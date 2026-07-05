@@ -1,43 +1,20 @@
-const { pool, supabase } = require("../db");
+const { pool } = require("../config/db");
 const csv = require("csv-parser");
 const stream = require("stream");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    if (pool) {
-      const sql = `
-        SELECT p.id, u.email, p.full_name, p.phone, p.region, p.created_at,
-               COALESCE(json_agg(ur.role) FILTER (WHERE ur.role IS NOT NULL), '[]'::json) as roles
-        FROM profiles p
-        JOIN users u ON u.id = p.id
-        LEFT JOIN user_roles ur ON p.id = ur.user_id
-        GROUP BY p.id, u.email, p.full_name, p.phone, p.region, p.created_at
-        ORDER BY p.created_at DESC
-      `;
-      const result = await pool.query(sql);
-      return res.json(result.rows);
-    } else {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, phone, region, created_at, user_roles(role)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-
-      const { data: users, error: usersErr } = await supabase.from("users").select("id, email");
-      if (usersErr) throw usersErr;
-      const emailMap = new Map((users ?? []).map((u) => [u.id, u.email]));
-
-      const formatted = data.map((u) => ({
-        id: u.id,
-        email: emailMap.get(u.id) || null,
-        full_name: u.full_name,
-        phone: u.phone,
-        region: u.region,
-        created_at: u.created_at,
-        roles: (u.user_roles ?? []).map((r) => r.role),
-      }));
-      return res.json(formatted);
-    }
+    const sql = `
+      SELECT p.id, u.email, p.full_name, p.phone, p.region, p.created_at,
+             COALESCE(json_agg(ur.role) FILTER (WHERE ur.role IS NOT NULL), '[]'::json) as roles
+      FROM profiles p
+      JOIN users u ON u.id = p.id
+      LEFT JOIN user_roles ur ON p.id = ur.user_id
+      GROUP BY p.id, u.email, p.full_name, p.phone, p.region, p.created_at
+      ORDER BY p.created_at DESC
+    `;
+    const result = await pool.query(sql);
+    return res.json(result.rows);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
@@ -46,38 +23,15 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getAuditLog = async (req, res) => {
   try {
-    if (pool) {
-      const sql = `
-        SELECT al.*, p.full_name as user_name
-        FROM audit_log al
-        LEFT JOIN profiles p ON al.user_id = p.id
-        ORDER BY al.created_at DESC
-        LIMIT 100
-      `;
-      const result = await pool.query(sql);
-      return res.json(result.rows);
-    } else {
-      const { data, error } = await supabase
-        .from("audit_log")
-        .select(
-          "id, user_id, action, table_name, record_id, details, created_at, profile:profiles(full_name)",
-        )
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (error) throw error;
-
-      const formatted = data.map((r) => ({
-        id: r.id,
-        user_id: r.user_id,
-        action: r.action,
-        table_name: r.table_name,
-        record_id: r.record_id,
-        details: r.details,
-        created_at: r.created_at,
-        user_name: r.profile ? r.profile.full_name : "Unknown User",
-      }));
-      return res.json(formatted);
-    }
+    const sql = `
+      SELECT al.*, p.full_name as user_name
+      FROM audit_log al
+      LEFT JOIN profiles p ON al.user_id = p.id
+      ORDER BY al.created_at DESC
+      LIMIT 100
+    `;
+    const result = await pool.query(sql);
+    return res.json(result.rows);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
@@ -127,61 +81,31 @@ exports.bulkImportPrices = async (req, res) => {
           }
 
           try {
-            if (pool) {
-              const resInsert = await pool.query(
-                `INSERT INTO prices (commodity_id, market_id, price_ghs, date_recorded, recorded_by) 
-                 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-                [commodityId, marketId, price, dateRecorded, userId],
-              );
-              const recordId = resInsert.rows[0].id;
-              imported.push(recordId);
+            const resInsert = await pool.query(
+              `INSERT INTO prices (commodity_id, market_id, price_ghs, date_recorded, recorded_by) 
+               VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+              [commodityId, marketId, price, dateRecorded, userId],
+            );
+            const recordId = resInsert.rows[0].id;
+            imported.push(recordId);
 
-              // Log to audit log
-              await pool.query(
-                `INSERT INTO audit_log (user_id, action, table_name, record_id, details) VALUES ($1, $2, $3, $4, $5)`,
-                [
-                  userId,
-                  "create",
-                  "prices",
-                  recordId,
-                  JSON.stringify({
-                    commodity_id: commodityId,
-                    market_id: marketId,
-                    price_ghs: price,
-                    date_recorded: dateRecorded,
-                    bulk: true,
-                  }),
-                ],
-              );
-            } else {
-              const { data, error } = await supabase
-                .from("prices")
-                .insert({
-                  commodity_id: commodityId,
-                  market_id: marketId,
-                  price_ghs: price,
-                  date_recorded: dateRecorded,
-                  recorded_by: userId,
-                })
-                .select("id")
-                .single();
-              if (error) throw error;
-              imported.push(data.id);
-
-              await supabase.from("audit_log").insert({
-                user_id: userId,
-                action: "create",
-                table_name: "prices",
-                record_id: data.id,
-                details: {
+            // Log to audit log
+            await pool.query(
+              `INSERT INTO audit_log (user_id, action, table_name, record_id, details) VALUES ($1, $2, $3, $4, $5)`,
+              [
+                userId,
+                "create",
+                "prices",
+                recordId,
+                JSON.stringify({
                   commodity_id: commodityId,
                   market_id: marketId,
                   price_ghs: price,
                   date_recorded: dateRecorded,
                   bulk: true,
-                },
-              });
-            }
+                }),
+              ],
+            );
           } catch (err) {
             errors.push({ index: i, row, error: err.message });
           }
@@ -217,33 +141,15 @@ exports.updateUserRole = async (req, res) => {
       return res.status(400).json({ error: "Invalid role" });
     }
 
-    if (pool) {
-      // Delete existing roles and insert the new one
-      await pool.query("DELETE FROM user_roles WHERE user_id = $1", [userId]);
-      await pool.query("INSERT INTO user_roles (user_id, role) VALUES ($1, $2)", [userId, role]);
+    // Delete existing roles and insert the new one
+    await pool.query("DELETE FROM user_roles WHERE user_id = $1", [userId]);
+    await pool.query("INSERT INTO user_roles (user_id, role) VALUES ($1, $2)", [userId, role]);
 
-      // Audit log
-      await pool.query(
-        `INSERT INTO audit_log (user_id, action, table_name, record_id, details) VALUES ($1, $2, $3, $4, $5)`,
-        [req.user.id, "update_role", "user_roles", userId, JSON.stringify({ role })],
-      );
-    } else {
-      // For Supabase, delete role rows and insert new one
-      const { error: delErr } = await supabase.from("user_roles").delete().eq("user_id", userId);
-      if (delErr) throw delErr;
-
-      const { error: insErr } = await supabase.from("user_roles").insert({ user_id: userId, role });
-      if (insErr) throw insErr;
-
-      // Audit Log
-      await supabase.from("audit_log").insert({
-        user_id: req.user.id,
-        action: "update_role",
-        table_name: "user_roles",
-        record_id: userId,
-        details: { role },
-      });
-    }
+    // Audit log
+    await pool.query(
+      `INSERT INTO audit_log (user_id, action, table_name, record_id, details) VALUES ($1, $2, $3, $4, $5)`,
+      [req.user.id, "update_role", "user_roles", userId, JSON.stringify({ role })],
+    );
 
     return res.json({ message: "User role updated successfully" });
   } catch (err) {
@@ -251,3 +157,23 @@ exports.updateUserRole = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+// Admin route to retrieve dashboard stats
+exports.getStats = async (req, res) => {
+  try {
+    const marketsRes = await pool.query("SELECT COUNT(*) FROM markets");
+    const commoditiesRes = await pool.query("SELECT COUNT(*) FROM commodities");
+    const pricesRes = await pool.query("SELECT COUNT(*) FROM prices");
+    const subsRes = await pool.query("SELECT COUNT(*) FROM sms_subscriptions WHERE active = true");
+    return res.json({
+      markets: parseInt(marketsRes.rows[0].count, 10),
+      commodities: parseInt(commoditiesRes.rows[0].count, 10),
+      prices: parseInt(pricesRes.rows[0].count, 10),
+      subscriptions: parseInt(subsRes.rows[0].count, 10),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+

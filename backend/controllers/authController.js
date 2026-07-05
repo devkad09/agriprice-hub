@@ -172,3 +172,54 @@ exports.getProfile = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to fetch profile", error: err.message });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user && (req.user.user_id || req.user.userId);
+    const { name, phone, region } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized", error: "no_user" });
+    }
+
+    if (!pool) {
+      return res.status(500).json({ success: false, message: "Database not configured", error: null });
+    }
+
+    let sql = "UPDATE profiles SET ";
+    const params = [];
+    let idx = 1;
+
+    if (name !== undefined) {
+      sql += `full_name = $${idx++}, `;
+      params.push(name);
+    }
+    if (phone !== undefined) {
+      sql += `phone = $${idx++}, `;
+      params.push(phone);
+    }
+    if (region !== undefined) {
+      sql += `region = $${idx++}, `;
+      params.push(region);
+    }
+
+    if (params.length === 0) {
+      return res.status(400).json({ success: false, message: "No fields to update" });
+    }
+
+    sql = sql.slice(0, -2);
+    sql += `, updated_at = now() WHERE id = $${idx++} RETURNING *`;
+    params.push(userId);
+
+    const result = await pool.query(sql, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Profile not found" });
+    }
+
+    return res.json({ success: true, message: "Profile updated successfully", data: result.rows[0] });
+  } catch (err) {
+    console.error("[Auth] updateProfile error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update profile", error: err.message });
+  }
+};
+

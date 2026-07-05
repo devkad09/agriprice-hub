@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { useState, Suspense } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { listMarkets, listCommodities } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,21 +23,14 @@ import {
 const commoditiesQuery = queryOptions({
   queryKey: ["commodities"],
   queryFn: async () => {
-    const { data, error } = await supabase
-      .from("commodities")
-      .select("id, name, category, unit_of_measure")
-      .order("name");
-    if (error) throw error;
-    return data;
+    return listCommodities();
   },
 });
 
 const marketsQuery = queryOptions({
   queryKey: ["markets"],
   queryFn: async () => {
-    const { data, error } = await supabase.from("markets").select("id, name, region").order("name");
-    if (error) throw error;
-    return data;
+    return listMarkets();
   },
 });
 
@@ -102,22 +95,13 @@ function PricesContent() {
 
   const selectedCom = commodities.find((c) => c.id === selectedCommodity);
 
-  const since = new Date();
-  since.setDate(since.getDate() - selectedRange);
-  const sinceStr = since.toISOString().slice(0, 10);
-
   const { data: trendData, isLoading: trendLoading } = useQuery({
-    queryKey: ["price-trends", selectedCommodity, sinceStr],
+    queryKey: ["price-trends", selectedCommodity, selectedRange],
     queryFn: async () => {
       if (!selectedCommodity) return [];
-      const { data: rows, error } = await supabase
-        .from("prices")
-        .select("price_ghs, date_recorded, market_id, market:markets(id,name)")
-        .eq("commodity_id", selectedCommodity)
-        .gte("date_recorded", sinceStr)
-        .order("date_recorded", { ascending: true });
-      if (error) throw error;
-      return rows ?? [];
+      const response = await fetch(`/api/prices/trends?commodity_id=${selectedCommodity}&days=${selectedRange}`);
+      if (!response.ok) throw new Error("Failed to fetch price trends");
+      return response.json();
     },
     enabled: !!selectedCommodity,
   });
@@ -126,21 +110,14 @@ function PricesContent() {
     queryKey: ["price-compare", selectedCommodity],
     queryFn: async () => {
       if (!selectedCommodity) return [];
-      const { data: rows, error } = await supabase
-        .from("prices")
-        .select("price_ghs, date_recorded, market_id, market:markets(id,name)")
-        .eq("commodity_id", selectedCommodity)
-        .order("date_recorded", { ascending: false })
-        .limit(500);
-      if (error) throw error;
-
-      const latest = new Map<string, { marketName: string; price: number; date: string }>();
-      for (const r of rows ?? []) {
-        const m = r.market as { id: string; name: string } | null;
-        if (!m || latest.has(m.id)) continue;
-        latest.set(m.id, { marketName: m.name, price: Number(r.price_ghs), date: r.date_recorded });
-      }
-      return Array.from(latest.values()).sort((a, b) => a.price - b.price);
+      const response = await fetch(`/api/prices/compare?commodity_id=${selectedCommodity}`);
+      if (!response.ok) throw new Error("Failed to fetch comparisons");
+      const rows = await response.json();
+      return rows.map((r: any) => ({
+        marketName: r.market_name,
+        price: Number(r.price_ghs),
+        date: r.date_recorded,
+      })).sort((a: any, b: any) => a.price - b.price);
     },
     enabled: !!selectedCommodity,
   });
@@ -150,10 +127,9 @@ function PricesContent() {
     if (!trendData?.length) return [];
     const byDate = new Map<string, Record<string, number | string>>();
     for (const r of trendData) {
-      const m = r.market as { id: string; name: string } | null;
-      if (!m || !enabledMarkets.has(m.id)) continue;
+      if (!enabledMarkets.has(r.market_id)) continue;
       const entry = byDate.get(r.date_recorded) ?? { date: r.date_recorded };
-      entry[m.name] = Number(r.price_ghs);
+      entry[r.market_name] = Number(r.price_ghs);
       byDate.set(r.date_recorded, entry);
     }
     return Array.from(byDate.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { listMarkets, listCommodities } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,24 +10,14 @@ import { ArrowRight, BarChart3, MapPin, MessageSquareText, Sprout, TrendingUp } 
 const marketsQuery = queryOptions({
   queryKey: ["markets"],
   queryFn: async () => {
-    const { data, error } = await supabase
-      .from("markets")
-      .select("id, name, region, description")
-      .order("name");
-    if (error) throw error;
-    return data;
+    return listMarkets();
   },
 });
 
 const commoditiesQuery = queryOptions({
   queryKey: ["commodities"],
   queryFn: async () => {
-    const { data, error } = await supabase
-      .from("commodities")
-      .select("id, name, category, unit_of_measure")
-      .order("name");
-    if (error) throw error;
-    return data;
+    return listCommodities();
   },
 });
 
@@ -239,6 +229,21 @@ function MarketsSection() {
                   <div>
                     <h3 className="font-display text-lg font-semibold">{m.name}</h3>
                     <p className="mt-0.5 text-sm text-muted-foreground">{m.region} Region</p>
+                    {m.location_lat != null && m.location_lng != null && (
+                      <>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Coordinates: {Number(m.location_lat).toFixed(3)}, {Number(m.location_lng).toFixed(3)}
+                        </p>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${m.location_lat},${m.location_lng}`}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="mt-1 inline-block text-xs text-primary hover:underline"
+                        >
+                          View on Google Maps
+                        </a>
+                      </>
+                    )}
                   </div>
                   <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                     <MapPin className="h-4 w-4" />

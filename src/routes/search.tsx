@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { listPrices } from "@/lib/prices.functions";
+import { listMarkets, getPrices } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,20 +50,15 @@ function SearchPage() {
   const { data: markets } = useQuery({
     queryKey: ["search-markets"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("markets")
-        .select("id, name, region")
-        .order("name");
-      if (error) throw error;
-      return data;
+      return listMarkets();
     },
   });
 
   const { data: priceData, isLoading } = useQuery<PriceItem[]>({
     queryKey: ["search-prices"],
     queryFn: async () => {
-      const res = await listPrices({ limit: 500 });
-      return (res.prices ?? []) as PriceItem[];
+      const res = await getPrices({ limit: 500 });
+      return res as PriceItem[];
     },
   });
 

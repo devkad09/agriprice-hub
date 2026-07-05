@@ -1,1 +1,0 @@
-import{a as e,i as t,r as n}from"./site-header-BCroK_lM.js";function r(r,i){return n({...r,enabled:!0,suspense:!0,throwOnError:t,placeholderData:void 0},e,i)}export{r as t};

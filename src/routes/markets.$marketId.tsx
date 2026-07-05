@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getPrices } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,29 +47,16 @@ function MarketContent() {
   const { data: market } = useQuery({
     queryKey: ["market-detail", marketId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("markets")
-        .select("*")
-        .eq("id", marketId)
-        .single();
-      if (error) throw error;
-      return data;
+      const response = await fetch(`/api/markets/${marketId}`);
+      if (!response.ok) throw new Error("Market not found");
+      return response.json();
     },
   });
 
   const { data: prices, isLoading } = useQuery({
     queryKey: ["market-prices", marketId],
     queryFn: async () => {
-      const { data: rows, error } = await supabase
-        .from("prices")
-        .select(
-          "id, price_ghs, date_recorded, commodity_id, commodity:commodities(id,name,unit_of_measure,category)",
-        )
-        .eq("market_id", marketId)
-        .order("date_recorded", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (error) throw error;
+      const rows = await getPrices({ marketId, limit: 500 });
 
       // Dedupe to latest per commodity, and find previous price for change indicator
       const latestMap = new Map<
@@ -134,6 +121,11 @@ function MarketContent() {
     );
   }
 
+  const locationInfo =
+    market.location_lat != null && market.location_lng != null
+      ? `${Number(market.location_lat).toFixed(3)}, ${Number(market.location_lng).toFixed(3)}`
+      : null;
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
@@ -152,6 +144,19 @@ function MarketContent() {
           <p className="text-muted-foreground">{market.region} Region</p>
           {market.description && (
             <p className="mt-1 text-sm text-muted-foreground">{market.description}</p>
+          )}
+          {locationInfo && (
+            <>
+              <p className="mt-1 text-sm text-muted-foreground">Coordinates: {locationInfo}</p>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${market.location_lat},${market.location_lng}`}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="mt-1 inline-block text-sm text-primary hover:underline"
+              >
+                View on Google Maps
+              </a>
+            </>
           )}
         </div>
       </div>

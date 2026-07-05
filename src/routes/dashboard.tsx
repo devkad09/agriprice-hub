@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getPrices } from "@/lib/backend-prices";
 import { useAuth } from "@/lib/use-auth";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +53,7 @@ function DashboardPage() {
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold">Dashboard</h1>
           <p className="mt-1 text-muted-foreground">
-            Welcome back, {user.user_metadata?.full_name || user.email?.split("@")[0]}
+            Welcome back, {user.name || user.email?.split("@")[0]}
           </p>
         </div>
         <StatsCards />
@@ -71,57 +71,35 @@ function DashboardPage() {
 }
 
 function StatsCards() {
-  const { data: markets } = useQuery({
-    queryKey: ["stats-markets"],
+  const { data: stats } = useQuery({
+    queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      const { count } = await supabase.from("markets").select("*", { count: "exact", head: true });
-      return count ?? 0;
-    },
-  });
-  const { data: commodities } = useQuery({
-    queryKey: ["stats-commodities"],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("commodities")
-        .select("*", { count: "exact", head: true });
-      return count ?? 0;
-    },
-  });
-  const { data: subs } = useQuery({
-    queryKey: ["stats-subs"],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("sms_subscriptions")
-        .select("*", { count: "exact", head: true })
-        .eq("active", true);
-      return count ?? 0;
-    },
-  });
-  const { data: totalPrices } = useQuery({
-    queryKey: ["stats-prices"],
-    queryFn: async () => {
-      const { count } = await supabase.from("prices").select("*", { count: "exact", head: true });
-      return count ?? 0;
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/admin/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
     },
   });
 
   const cards = [
-    { label: "Markets", value: markets ?? "—", icon: MapPin, color: "text-blue-600 bg-blue-50" },
+    { label: "Markets", value: stats?.markets ?? "—", icon: MapPin, color: "text-blue-600 bg-blue-50" },
     {
       label: "Commodities",
-      value: commodities ?? "—",
+      value: stats?.commodities ?? "—",
       icon: Sprout,
       color: "text-primary bg-primary/10",
     },
     {
       label: "Price Entries",
-      value: totalPrices ?? "—",
+      value: stats?.prices ?? "—",
       icon: BarChart3,
       color: "text-amber-600 bg-amber-50",
     },
     {
       label: "Active Alerts",
-      value: subs ?? "—",
+      value: stats?.subscriptions ?? "—",
       icon: Bell,
       color: "text-violet-600 bg-violet-50",
     },
@@ -150,26 +128,14 @@ function LatestPricesTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-latest-prices"],
     queryFn: async () => {
-      const { data: rows, error } = await supabase
-        .from("prices")
-        .select(
-          "id, price_ghs, date_recorded, commodity:commodities(name,unit_of_measure,category), market:markets(name,region)",
-        )
-        .order("date_recorded", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
+      const rows = await getPrices({ limit: 200 });
 
       // Dedupe to latest per commodity+market
       const seen = new Set<string>();
       const latest = [];
       for (const r of rows ?? []) {
-        const commodity = r.commodity as {
-          name: string;
-          unit_of_measure: string;
-          category: string;
-        } | null;
-        const market = r.market as { name: string; region: string } | null;
+        const commodity = r.commodity;
+        const market = r.market;
         if (!commodity || !market) continue;
         const key = `${commodity.name}:${market.name}`;
         if (seen.has(key)) continue;
@@ -237,15 +203,7 @@ function RecentActivity() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-recent-activity"],
     queryFn: async () => {
-      const { data: rows, error } = await supabase
-        .from("prices")
-        .select(
-          "id, price_ghs, date_recorded, created_at, commodity:commodities(name), market:markets(name)",
-        )
-        .order("created_at", { ascending: false })
-        .limit(8);
-      if (error) throw error;
-      return rows;
+      return getPrices({ limit: 8 });
     },
   });
 

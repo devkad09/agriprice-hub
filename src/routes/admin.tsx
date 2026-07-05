@@ -1,12 +1,6 @@
-import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/use-auth";
 import { useRole } from "@/lib/use-role";
 import { AppLayout } from "@/components/app-layout";
@@ -44,278 +38,6 @@ export const Route = createFileRoute("/admin")({
   }),
   component: AdminPage,
 });
-
-// =========================================================================
-// SERVER-SIDE SERVER FUNCTIONS (ADMIN-ONLY BYPASS RLS OPERATIONS)
-// =========================================================================
-import { mockSupabase } from "@/integrations/supabase/mock-client";
-
-function adminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const isDefaultOrMock = 
-    !SUPABASE_URL || 
-    SUPABASE_URL.includes("your-project") || 
-    SUPABASE_URL.includes("fbrcnxwypiccqazgyxbz") ||
-    process.env.VITE_USE_MOCK_SUPABASE === "true";
-
-  if (isDefaultOrMock) {
-    return mockSupabase as any;
-  }
-
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
-  return createClient<Database>(process.env.SUPABASE_URL!, serviceKey!, {
-    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-  });
-}
-
-
-async function ensureAdmin(supabaseClient: SupabaseClient<Database>, userId: string) {
-  const { data: isAdmin } = await supabaseClient.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
-  if (!isAdmin) {
-    throw new Error("Forbidden: Admin access required.");
-  }
-}
-
-export const adminListUsers = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase: userSupabase, userId } = context;
-    await ensureAdmin(userSupabase, userId);
-
-    const client = adminClient();
-    const { data: profiles, error: pErr } = await client
-      .from("profiles")
-      .select("id, full_name, phone, region, created_at")
-      .order("created_at", { ascending: false });
-    if (pErr) throw new Error(pErr.message);
-
-    const { data: roles, error: rErr } = await client.from("user_roles").select("user_id, role");
-    if (rErr) throw new Error(rErr.message);
-
-    const mapped = (profiles ?? []).map((p) => {
-      const pRoles = (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role);
-      return {
-        ...p,
-        roles: pRoles,
-      };
-    });
-
-    return { users: mapped };
-  });
-
-const changeRoleSchema = z.object({
-  targetUserId: z.string().uuid(),
-  role: z.enum(["farmer", "data_officer", "admin"]),
-});
-
-export const adminChangeUserRole = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => changeRoleSchema.parse(input))
-  .handler(async ({ data, context }) => {
-    const { supabase: userSupabase, userId } = context;
-    await ensureAdmin(userSupabase, userId);
-
-    const client = adminClient();
-    const { error: delErr } = await client
-      .from("user_roles")
-      .delete()
-      .eq("user_id", data.targetUserId);
-    if (delErr) throw new Error(delErr.message);
-
-    const { error: insErr } = await client.from("user_roles").insert({
-      user_id: data.targetUserId,
-      role: data.role,
-    });
-    if (insErr) throw new Error(insErr.message);
-
-    await client.from("audit_log").insert({
-      user_id: userId,
-      action: "update_role",
-      table_name: "user_roles",
-      record_id: data.targetUserId,
-      details: { role: data.role },
-    });
-
-    return { success: true };
-  });
-
-export const adminListAuditLogs = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase: userSupabase, userId } = context;
-    await ensureAdmin(userSupabase, userId);
-
-    const client = adminClient();
-    const { data: logs, error: lErr } = await client
-      .from("audit_log")
-      .select("id, user_id, action, table_name, record_id, details, created_at")
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (lErr) throw new Error(lErr.message);
-
-    const userIds = Array.from(
-      new Set((logs ?? []).map((l) => l.user_id).filter((id): id is string => id != null)),
-    );
-    const profilesMap = new Map<string, string>();
-    if (userIds.length > 0) {
-      const { data: profiles, error: pErr } = await client
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", userIds);
-      if (!pErr && profiles) {
-        profiles.forEach((p) => profilesMap.set(p.id, p.full_name ?? ""));
-      }
-    }
-
-    const mapped = (logs ?? []).map((l) => ({
-      ...l,
-      user_name: l.user_id ? profilesMap.get(l.user_id) || "Unknown User" : "System",
-    }));
-
-    return { logs: mapped };
-  });
-
-const bulkImportSchema = z.object({
-  prices: z.array(
-    z.object({
-      marketId: z.string().uuid(),
-      commodityId: z.string().uuid(),
-      priceGhs: z.number().positive(),
-      dateRecorded: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    }),
-  ),
-});
-
-export const adminBulkImportPrices = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => bulkImportSchema.parse(input))
-  .handler(async ({ data, context }) => {
-    const { supabase: userSupabase, userId } = context;
-    await ensureAdmin(userSupabase, userId);
-
-    const client = adminClient();
-    const imported = [];
-    const errors = [];
-
-    for (let i = 0; i < data.prices.length; i++) {
-      const p = data.prices[i];
-      try {
-        const { data: row, error: insErr } = await client
-          .from("prices")
-          .insert({
-            commodity_id: p.commodityId,
-            market_id: p.marketId,
-            price_ghs: p.priceGhs,
-            date_recorded: p.dateRecorded,
-            recorded_by: userId,
-          })
-          .select("id")
-          .single();
-
-        if (insErr) throw insErr;
-        imported.push(row.id);
-
-        await client.from("audit_log").insert({
-          user_id: userId,
-          action: "create",
-          table_name: "prices",
-          record_id: row.id,
-          details: { ...p, bulk: true },
-        });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        errors.push({ index: i, price: p, error: message });
-      }
-    }
-
-    return {
-      successCount: imported.length,
-      errorCount: errors.length,
-      errors,
-    };
-  });
-
-export const adminTriggerSMSAlerts = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase: userSupabase, userId } = context;
-    await ensureAdmin(userSupabase, userId);
-
-    const client = adminClient();
-    const { data: subRows, error: subErr } = await client
-      .from("sms_subscriptions")
-      .select(
-        "id, commodity_id, active, commodity:commodities(name,unit_of_measure), profile:profiles(phone)",
-      )
-      .eq("active", true);
-    if (subErr) throw new Error(subErr.message);
-
-    const subscriptions = (subRows ?? [])
-      .filter((r) => r.profile && r.profile.phone && r.commodity)
-      .map((r) => ({
-        id: r.id,
-        commodity_id: r.commodity_id,
-        commodity_name: r.commodity.name,
-        unit_of_measure: r.commodity.unit_of_measure,
-        phone: r.profile.phone,
-      }));
-
-    const { data: priceRows, error: priceErr } = await client
-      .from("prices")
-      .select("price_ghs, date_recorded, commodity_id, market_id, market:markets(name,region)")
-      .order("date_recorded", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(1000);
-    if (priceErr) throw new Error(priceErr.message);
-
-    const latestPrices = new Map();
-    for (const r of priceRows ?? []) {
-      if (!latestPrices.has(r.commodity_id)) {
-        latestPrices.set(r.commodity_id, {
-          commodity_id: r.commodity_id,
-          price_ghs: Number(r.price_ghs),
-          date_recorded: r.date_recorded,
-          market_name: r.market ? r.market.name : "Unknown",
-          region: r.market ? r.market.region : "",
-        });
-      }
-    }
-
-    let count = 0;
-    const username = process.env.AT_USERNAME || "sandbox";
-    const apiKey = process.env.AT_API_KEY;
-    let atSMS: { send: (options: { to: string[]; message: string }) => Promise<unknown> } | null =
-      null;
-
-    if (apiKey) {
-      try {
-        const africastalking = await import("africastalking");
-        const at = (africastalking.default || africastalking)({ username, apiKey });
-        atSMS = at.SMS;
-      } catch (err) {
-        console.error("Failed to load Africa's Talking inside SSR function:", err);
-      }
-    }
-
-    for (const sub of subscriptions) {
-      const latest = latestPrices.get(sub.commodity_id);
-      if (!latest) continue;
-
-      const msg = `AgriFarm: ${sub.commodity_name} - GHS ${Number(latest.price_ghs).toFixed(2)}/${sub.unit_of_measure} (${latest.market_name}, ${latest.region}). Reply STOP to unsubscribe.`;
-
-      if (atSMS) {
-        await atSMS.send({ to: [sub.phone], message: msg });
-      } else {
-        console.log(`[MOCK BROADCAST] To: ${sub.phone} | Msg: "${msg}"`);
-      }
-      count++;
-    }
-
-    return { count };
-  });
 
 // =========================================================================
 // REACT COMPONENT PAGE
@@ -426,10 +148,15 @@ function UserManagementTab() {
     isLoading,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ["admin-users-list"],
     queryFn: async () => {
-      return adminListUsers();
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/admin/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json();
     },
   });
 
@@ -438,7 +165,23 @@ function UserManagementTab() {
       targetUserId: string;
       role: "farmer" | "data_officer" | "admin";
     }) => {
-      return adminChangeUserRole(payload);
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/admin/update-role", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: payload.targetUserId,
+          role: payload.role,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || err.error || "Failed to update role");
+      }
+      return res.json();
     },
     onSuccess: () => {
       toast.success("User role updated successfully!");
@@ -494,7 +237,7 @@ function UserManagementTab() {
               </tr>
             </thead>
             <tbody>
-              {(userData?.users ?? []).map((u) => {
+              {(userData ?? []).map((u) => {
                 const primaryRole = u.roles.includes("admin")
                   ? "admin"
                   : u.roles.includes("data_officer")
@@ -546,10 +289,15 @@ function UserManagementTab() {
 // TAB: AUDIT LOGS
 // =========================================================================
 function AuditLogsTab() {
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<any[]>({
     queryKey: ["admin-audit-logs"],
     queryFn: async () => {
-      return adminListAuditLogs();
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/admin/audit-log", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch audit logs");
+      return res.json();
     },
   });
 
@@ -600,7 +348,7 @@ function AuditLogsTab() {
               </tr>
             </thead>
             <tbody>
-              {(data?.logs ?? []).map((l) => {
+              {(data ?? []).map((l) => {
                 let badgeColor = "bg-muted text-muted-foreground border-muted-foreground/20";
                 if (l.action === "create") {
                   badgeColor = "bg-emerald-500/10 text-emerald-700 border-emerald-500/20";
@@ -621,7 +369,7 @@ function AuditLogsTab() {
                       {l.created_at ? new Date(l.created_at).toLocaleString() : "—"}
                     </td>
                     <td className="py-2.5 pr-4 font-medium text-foreground whitespace-nowrap">
-                      {l.user_name}
+                      {l.user_name || "System"}
                     </td>
                     <td className="py-2.5 pr-4">
                       <span
@@ -671,14 +419,10 @@ interface ImportResult {
   errorCount: number;
   errors: Array<{
     index: number;
-    price: {
-      marketId: string;
-      commodityId: string;
-      priceGhs: number;
-      dateRecorded: string;
-    };
+    row: any;
     error: string;
   }>;
+  message?: string;
 }
 
 // =========================================================================
@@ -686,26 +430,36 @@ interface ImportResult {
 // =========================================================================
 function BulkImportTab() {
   const queryClient = useQueryClient();
-  const [csvText, setCsvText] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<ParsedPriceRow[]>([]);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   const importMutation = useMutation({
-    mutationFn: async (payload: {
-      prices: Array<{
-        marketId: string;
-        commodityId: string;
-        priceGhs: number;
-        dateRecorded: string;
-      }>;
-    }) => {
-      return adminBulkImportPrices(payload);
+    mutationFn: async () => {
+      if (!selectedFile) throw new Error("No file selected");
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const res = await fetch("/api/admin/bulk-import", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || err.error || "Failed to process bulk import.");
+      }
+      return res.json();
     },
     onSuccess: (res) => {
       setImportResult(res);
-      toast.success(`Successfully imported ${res.successCount} price records!`);
+      toast.success(res.message || `Successfully imported price records!`);
       setParsedRows([]);
-      setCsvText("");
+      setSelectedFile(null);
       queryClient.invalidateQueries({ queryKey: ["dashboard-latest-prices"] });
     },
     onError: (err: unknown) => {
@@ -717,11 +471,11 @@ function BulkImportTab() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSelectedFile(file);
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result as string;
-      setCsvText(text);
       parseCSV(text);
     };
     reader.readAsText(file);
@@ -776,21 +530,11 @@ function BulkImportTab() {
   };
 
   const handleImportSubmit = () => {
-    const validRows = parsedRows
-      .filter((r) => r.isValid)
-      .map((r) => ({
-        marketId: r.marketId,
-        commodityId: r.commodityId,
-        priceGhs: r.priceGhs,
-        dateRecorded: r.dateRecorded,
-      }));
-
-    if (validRows.length === 0) {
-      toast.error("No valid rows to import.");
+    if (!selectedFile) {
+      toast.error("No file selected.");
       return;
     }
-
-    importMutation.mutate({ prices: validRows });
+    importMutation.mutate();
   };
 
   return (
@@ -819,7 +563,7 @@ function BulkImportTab() {
               <div className="text-center">
                 <Upload className="h-8 w-8 mx-auto text-muted-foreground group-hover:text-primary transition-colors" />
                 <p className="mt-2 text-xs text-muted-foreground font-medium">
-                  Drag and drop or click to upload .csv
+                  {selectedFile ? selectedFile.name : "Drag and drop or click to upload .csv"}
                 </p>
               </div>
             </div>
@@ -948,15 +692,24 @@ function SmsBroadcastTab() {
   const broadcastMutation = useMutation({
     mutationFn: async () => {
       setTriggering(true);
-      return adminTriggerSMSAlerts();
+      const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
+      const res = await fetch("/api/sms/send-alerts", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || err.error || "Failed to trigger broadcast.");
+      }
+      return res.json();
     },
     onSuccess: (res) => {
       setTriggering(false);
       setBroadcastLog((prev) => [
-        `[${new Date().toLocaleTimeString()}] Broadcast successful! Dispatched updates to ${res.count} active subscriber(s).`,
+        `[${new Date().toLocaleTimeString()}] Broadcast successful! Dispatched updates to ${res.broadcastCount || 0} active subscriber(s).`,
         ...prev,
       ]);
-      toast.success(`Dispatched SMS updates to ${res.count} subscribers!`);
+      toast.success(res.message || `Dispatched SMS updates to ${res.broadcastCount || 0} subscribers!`);
     },
     onError: (err: unknown) => {
       setTriggering(false);

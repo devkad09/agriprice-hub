@@ -1,5 +1,5 @@
 const africastalking = require("africastalking");
-const { pool, supabase } = require("../db");
+const { pool } = require("../config/db");
 
 const username = process.env.AT_USERNAME || "sandbox";
 const apiKey = process.env.AT_API_KEY;
@@ -49,66 +49,26 @@ async function sendSMS(phoneNumber, message) {
 async function broadcastPriceAlerts() {
   try {
     let subscriptions = [];
-    let latestPrices = new Map(); // commodity_id -> price record
+    const latestPrices = new Map(); // commodity_id -> price record
 
-    if (pool) {
-      const subRes = await pool.query(`
-        SELECT sub.id, sub.commodity_id, c.name as commodity_name, c.unit_of_measure, p.phone
-        FROM sms_subscriptions sub
-        JOIN profiles p ON sub.user_id = p.id
-        JOIN commodities c ON sub.commodity_id = c.id
-        WHERE sub.active = true AND p.phone IS NOT NULL AND p.phone != ''
-      `);
-      subscriptions = subRes.rows;
+    const subRes = await pool.query(`
+      SELECT sub.id, sub.commodity_id, c.name as commodity_name, c.unit_of_measure, p.phone
+      FROM sms_subscriptions sub
+      JOIN profiles p ON sub.user_id = p.id
+      JOIN commodities c ON sub.commodity_id = c.id
+      WHERE sub.active = true AND p.phone IS NOT NULL AND p.phone != ''
+    `);
+    subscriptions = subRes.rows;
 
-      const priceRes = await pool.query(`
-        SELECT DISTINCT ON (commodity_id) 
-               p.commodity_id, p.price_ghs, p.date_recorded, m.name as market_name, m.region
-        FROM prices p
-        JOIN markets m ON p.market_id = m.id
-        ORDER BY p.commodity_id, p.date_recorded DESC, p.created_at DESC
-      `);
-      for (const r of priceRes.rows) {
-        latestPrices.set(r.commodity_id, r);
-      }
-    } else {
-      const { data: subRows, error: subErr } = await supabase
-        .from("sms_subscriptions")
-        .select(
-          "id, commodity_id, active, commodity:commodities(name,unit_of_measure), profile:profiles(phone)",
-        )
-        .eq("active", true);
-      if (subErr) throw subErr;
-
-      subscriptions = (subRows ?? [])
-        .filter((r) => r.profile && r.profile.phone && r.commodity)
-        .map((r) => ({
-          id: r.id,
-          commodity_id: r.commodity_id,
-          commodity_name: r.commodity.name,
-          unit_of_measure: r.commodity.unit_of_measure,
-          phone: r.profile.phone,
-        }));
-
-      const { data: priceRows, error: priceErr } = await supabase
-        .from("prices")
-        .select("price_ghs, date_recorded, commodity_id, market_id, market:markets(name,region)")
-        .order("date_recorded", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      if (priceErr) throw priceErr;
-
-      for (const r of priceRows ?? []) {
-        if (!latestPrices.has(r.commodity_id)) {
-          latestPrices.set(r.commodity_id, {
-            commodity_id: r.commodity_id,
-            price_ghs: Number(r.price_ghs),
-            date_recorded: r.date_recorded,
-            market_name: r.market ? r.market.name : "Unknown",
-            region: r.market ? r.market.region : "",
-          });
-        }
-      }
+    const priceRes = await pool.query(`
+      SELECT DISTINCT ON (commodity_id) 
+             p.commodity_id, p.price_ghs, p.date_recorded, m.name as market_name, m.region
+      FROM prices p
+      JOIN markets m ON p.market_id = m.id
+      ORDER BY p.commodity_id, p.date_recorded DESC, p.created_at DESC
+    `);
+    for (const r of priceRes.rows) {
+      latestPrices.set(r.commodity_id, r);
     }
 
     console.log(

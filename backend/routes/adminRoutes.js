@@ -9,6 +9,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/users", authMiddleware, requireRole("admin"), adminController.getAllUsers);
 router.get("/audit-log", authMiddleware, requireRole("admin"), adminController.getAuditLog);
+router.get("/stats", authMiddleware, adminController.getStats);
 router.post(
   "/bulk-import",
   authMiddleware,
