@@ -84,31 +84,39 @@ function StatsCards() {
   });
 
   const cards = [
-    { label: "Markets", value: stats?.markets ?? "—", icon: MapPin, color: "text-blue-600 bg-blue-50" },
+    {
+      label: "Markets",
+      value: stats?.markets ?? "—",
+      icon: MapPin,
+      color: "text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400",
+    },
     {
       label: "Commodities",
       value: stats?.commodities ?? "—",
       icon: Sprout,
-      color: "text-primary bg-primary/10",
+      color: "text-primary bg-primary/10 dark:bg-primary/20 dark:text-primary-foreground/80",
     },
     {
       label: "Price Entries",
       value: stats?.prices ?? "—",
       icon: BarChart3,
-      color: "text-amber-600 bg-amber-50",
+      color: "text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400",
     },
     {
       label: "Active Alerts",
       value: stats?.subscriptions ?? "—",
       icon: Bell,
-      color: "text-violet-600 bg-violet-50",
+      color: "text-violet-600 bg-violet-50 dark:bg-violet-950/30 dark:text-violet-400",
     },
   ];
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map(({ label, value, icon: Icon, color }) => (
-        <Card key={label} className="border-border/60 shadow-[var(--shadow-card)]">
+        <Card
+          key={label}
+          className="border-border/60 shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+        >
           <CardContent className="flex items-center gap-4 p-5">
             <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg ${color}`}>
               <Icon className="h-5 w-5" />

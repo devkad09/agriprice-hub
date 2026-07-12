@@ -153,7 +153,11 @@ function AuthPage() {
       <main className="relative grid min-h-screen md:grid-cols-2">
         <div
           className="relative hidden flex-col justify-between overflow-hidden p-12 text-primary-foreground md:flex"
-          style={{ background: "var(--gradient-hero)" }}
+          style={{
+            backgroundImage: `linear-gradient(135deg, oklch(0.35 0.1 145 / 0.85) 0%, oklch(0.45 0.13 150 / 0.9) 60%, oklch(0.55 0.15 90 / 0.9) 100%), url(/login-bg.jpg)`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         >
           <Link to="/" className="flex items-center gap-2 text-lg font-bold">
             <span className="grid h-10 w-10 place-items-center rounded-lg bg-white/15 backdrop-blur">

@@ -34,7 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, Pencil, Trash2, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, ShieldAlert, CheckCircle2, ClipboardPenLine, History } from "lucide-react";
 
 export const Route = createFileRoute("/officer")({
   head: () => ({
@@ -184,7 +184,10 @@ function PriceEntryForm() {
   return (
     <Card className="border-border/60 shadow-[var(--shadow-card)]">
       <CardHeader>
-        <CardTitle className="font-display text-lg">Record Daily Price</CardTitle>
+        <CardTitle className="font-display text-lg flex items-center gap-2">
+          <ClipboardPenLine className="h-5 w-5 text-primary shrink-0" />
+          Record Daily Price
+        </CardTitle>
         <CardDescription>Enter the observed price of a crop at a specific market.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -357,7 +360,10 @@ function RecentEntriesTable() {
     <>
       <Card className="border-border/60 shadow-[var(--shadow-card)]">
         <CardHeader>
-          <CardTitle className="font-display text-lg">Your Recent Price Entries</CardTitle>
+          <CardTitle className="font-display text-lg flex items-center gap-2">
+            <History className="h-5 w-5 text-primary shrink-0" />
+            Your Recent Price Entries
+          </CardTitle>
           <CardDescription>
             A list of the last 50 prices you've recorded. You can edit or delete them here.
           </CardDescription>

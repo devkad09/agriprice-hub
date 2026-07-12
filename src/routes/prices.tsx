@@ -153,71 +153,103 @@ function PricesContent() {
         Track commodity price trends across Ghana's markets
       </p>
 
-      {/* Controls */}
-      <div className="mt-6 flex flex-wrap items-end gap-4">
-        {/* Commodity selector */}
-        <div className="space-y-1.5">
-          <label
-            htmlFor="commodity-select"
-            className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
-          >
-            Commodity
-          </label>
-          <select
-            id="commodity-select"
-            value={selectedCommodity}
-            onChange={(e) => setSelectedCommodity(e.target.value)}
-            className="flex h-9 w-56 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            {commodities.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.unit_of_measure})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Date range */}
-        <div className="space-y-1.5">
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Range
-          </span>
-          <div className="flex gap-1">
-            {RANGES.map((r) => (
-              <Button
-                key={r.label}
-                variant={selectedRange === r.days ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedRange(r.days)}
-                className="min-w-[3rem]"
+      {/* Controls Layout with Map Grid */}
+      <div className="mt-6 grid gap-6 md:grid-cols-4 items-start">
+        <div className="md:col-span-3 space-y-5">
+          <div className="flex flex-wrap items-end gap-4">
+            {/* Commodity selector */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="commodity-select"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
               >
-                {r.label}
-              </Button>
-            ))}
+                Commodity
+              </label>
+              <select
+                id="commodity-select"
+                value={selectedCommodity}
+                onChange={(e) => setSelectedCommodity(e.target.value)}
+                className="flex h-9 w-56 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                {commodities.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.unit_of_measure})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date range */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Range
+              </span>
+              <div className="flex gap-1">
+                {RANGES.map((r) => (
+                  <Button
+                    key={r.label}
+                    variant={selectedRange === r.days ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedRange(r.days)}
+                    className="min-w-[3rem]"
+                  >
+                    {r.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Market filter chips with colored markers */}
+          <div className="space-y-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+              Filter by Market (click map dots or chips)
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {markets.map((m, i) => {
+                const isEnabled = enabledMarkets.has(m.id);
+                const color = CHART_COLORS[i % CHART_COLORS.length];
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => toggleMarket(m.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                      isEnabled
+                        ? "border-transparent text-white shadow-sm scale-105"
+                        : "border-border bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                    style={
+                      isEnabled
+                        ? { backgroundColor: color }
+                        : undefined
+                    }
+                  >
+                    <span
+                      className="h-1.5 w-1.5 rounded-full transition-transform duration-300"
+                      style={{
+                        backgroundColor: isEnabled ? "#ffffff" : color,
+                      }}
+                    />
+                    {m.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Market toggles */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {markets.map((m, i) => (
-          <button
-            key={m.id}
-            onClick={() => toggleMarket(m.id)}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-              enabledMarkets.has(m.id)
-                ? "border-transparent text-white"
-                : "border-border bg-background text-muted-foreground"
-            }`}
-            style={
-              enabledMarkets.has(m.id)
-                ? { backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }
-                : undefined
-            }
-          >
-            {m.name}
-          </button>
-        ))}
+        {/* Ghana Map Widget */}
+        <div className="md:col-span-1 border border-border/60 bg-card rounded-xl p-4 shadow-[var(--shadow-card)] flex flex-col items-center">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
+            Market Locations
+          </span>
+          <GhanaMap
+            markets={markets}
+            enabledMarkets={enabledMarkets}
+            toggleMarket={toggleMarket}
+            chartColors={CHART_COLORS}
+          />
+        </div>
       </div>
 
       {/* Line Chart */}
@@ -307,3 +339,107 @@ function PricesContent() {
     </main>
   );
 }
+
+function GhanaMap({
+  markets,
+  enabledMarkets,
+  toggleMarket,
+  chartColors,
+}: {
+  markets: any[];
+  enabledMarkets: Set<string>;
+  toggleMarket: (id: string) => void;
+  chartColors: string[];
+}) {
+  const marketMapInfo: Record<
+    string,
+    { x: number; y: number; colorIndex: number; align: "left" | "right" }
+  > = {
+    "Tamale": { x: 62, y: 50, colorIndex: 0, align: "right" },
+    "Techiman": { x: 44, y: 90, colorIndex: 1, align: "left" },
+    "Kejetia": { x: 42, y: 112, colorIndex: 2, align: "left" },
+    "Kumasi Central": { x: 58, y: 114, colorIndex: 3, align: "right" },
+    "Makola": { x: 76, y: 138, colorIndex: 4, align: "right" },
+  };
+
+  return (
+    <div className="relative w-full max-w-[180px] aspect-[3/4]">
+      <svg
+        viewBox="0 0 120 160"
+        className="w-full h-full select-none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Ghana outline path */}
+        <path
+          d="M 40 10 C 55 8, 70 8, 80 10 C 85 15, 82 25, 80 35 C 85 45, 90 55, 95 65 C 92 75, 92 85, 94 95 C 90 105, 82 115, 84 125 C 80 135, 75 142, 65 145 C 55 146, 45 145, 38 143 C 35 130, 25 125, 28 115 C 32 105, 28 95, 30 85 C 26 75, 25 65, 28 55 C 32 45, 35 30, 40 10 Z"
+          fill="var(--primary)"
+          fillOpacity={0.04}
+          stroke="var(--primary)"
+          strokeWidth={1}
+          strokeDasharray="2 2"
+          className="transition-all duration-300"
+        />
+
+        {/* Volta Lake representation */}
+        <path
+          d="M 75 80 Q 82 95 86 115 Q 84 120 78 110 T 70 95 Z"
+          fill="oklch(0.7 0.15 190 / 0.15)"
+          stroke="oklch(0.7 0.15 190 / 0.3)"
+          strokeWidth={0.5}
+        />
+
+        {/* Market points */}
+        {markets.map((m) => {
+          const info = marketMapInfo[m.name];
+          if (!info) return null;
+
+          const isEnabled = enabledMarkets.has(m.id);
+          const color = chartColors[info.colorIndex % chartColors.length];
+
+          return (
+            <g
+              key={m.id}
+              onClick={() => toggleMarket(m.id)}
+              className="cursor-pointer group"
+            >
+              {/* Pulse effect for enabled markets */}
+              {isEnabled && (
+                <circle
+                  cx={info.x}
+                  cy={info.y}
+                  r={6}
+                  fill={color}
+                  className="animate-ping opacity-25"
+                />
+              )}
+              {/* Main marker dot */}
+              <circle
+                cx={info.x}
+                cy={info.y}
+                r={isEnabled ? 4 : 3}
+                fill={isEnabled ? color : "oklch(var(--muted-foreground))"}
+                stroke="#ffffff"
+                strokeWidth={1}
+                className="transition-all duration-300 group-hover:r-5 group-hover:stroke-primary"
+              />
+              {/* Market Name Label */}
+              <text
+                x={info.x + (info.align === "left" ? -6 : 6)}
+                y={info.y + 3}
+                textAnchor={info.align === "left" ? "end" : "start"}
+                className={`text-[8px] font-semibold transition-colors duration-300 select-none ${
+                  isEnabled
+                    ? "fill-foreground font-bold"
+                    : "fill-muted-foreground group-hover:fill-foreground"
+                }`}
+              >
+                {m.name.replace(" Central", "")}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+

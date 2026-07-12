@@ -35,6 +35,77 @@ export const Route = createFileRoute("/subscriptions")({
   component: SubscriptionsPage,
 });
 
+function SMSIllustrationCard() {
+  return (
+    <Card className="border-border/60 bg-gradient-to-br from-primary/5 via-transparent to-harvest/5 shadow-[var(--shadow-card)] overflow-hidden">
+      <CardContent className="p-5 flex flex-col items-center text-center">
+        <div className="relative w-full max-w-[100px] aspect-[1/1.8] my-2">
+          {/* Animated SVG Smartphone */}
+          <svg
+            viewBox="0 0 100 180"
+            className="w-full h-full drop-shadow-md"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {/* Phone Body */}
+            <rect
+              x="5"
+              y="5"
+              width="90"
+              height="170"
+              rx="15"
+              fill="oklch(0.22 0.04 145)"
+              stroke="var(--border)"
+              strokeWidth="2"
+            />
+            {/* Screen */}
+            <rect
+              x="9"
+              y="12"
+              width="82"
+              height="156"
+              rx="10"
+              fill="oklch(0.985 0.012 95)"
+            />
+            {/* Phone Speaker/Camera Notch */}
+            <rect
+              x="35"
+              y="5"
+              width="30"
+              height="4"
+              rx="2"
+              fill="oklch(0.1 0.01 145)"
+            />
+            
+            {/* SMS Message Bubble 1 (Tomatoes) */}
+            <g transform="translate(14, 25)">
+              <rect x="0" y="0" width="72" height="32" rx="6" fill="var(--primary)" />
+              <polygon points="10,32 15,32 10,37" fill="var(--primary)" />
+              <text x="8" y="12" fill="#ffffff" className="text-[6px] font-bold" fillOpacity={0.8}>AgriFarm Alert</text>
+              <text x="8" y="24" fill="#ffffff" className="text-[7px] font-semibold">Tomatoes: GHS 720</text>
+            </g>
+
+            {/* SMS Message Bubble 2 (Maize) */}
+            <g transform="translate(14, 70)">
+              <rect x="0" y="0" width="72" height="32" rx="6" fill="oklch(0.42 0.07 55)" />
+              <polygon points="62,32 57,32 62,37" fill="oklch(0.42 0.07 55)" />
+              <text x="8" y="12" fill="#ffffff" className="text-[6px] font-bold" fillOpacity={0.8}>AgriFarm Alert</text>
+              <text x="8" y="24" fill="#ffffff" className="text-[7px] font-semibold">Maize: GHS 310</text>
+            </g>
+
+            {/* Status bar dot indicators */}
+            <circle cx="80" cy="18" r="1.5" fill="var(--primary)" />
+            <circle cx="85" cy="18" r="1.5" fill="var(--primary)" />
+          </svg>
+        </div>
+        <h3 className="font-display text-sm font-semibold mt-3">Offline SMS Alerts</h3>
+        <p className="text-xs text-muted-foreground mt-1 max-w-[220px]">
+          No internet required. Receive live market updates directly on your phone when prices change.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function SubscriptionsPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -67,6 +138,7 @@ function SubscriptionsPage() {
 
         <div className="grid gap-8 md:grid-cols-3">
           <div className="space-y-8 md:col-span-1">
+            <SMSIllustrationCard />
             <PhoneVerificationSection />
             <AddSubscriptionForm />
           </div>
@@ -465,7 +537,10 @@ function SubscriptionsList() {
     <>
       <Card className="border-border/60 shadow-[var(--shadow-card)]">
         <CardHeader>
-          <CardTitle className="font-display text-lg">Your Subscriptions</CardTitle>
+          <CardTitle className="font-display text-lg flex items-center gap-2">
+            <Bell className="h-5 w-5 text-primary shrink-0" />
+            Your Subscriptions
+          </CardTitle>
           <CardDescription>Turn alerts on or off, or unsubscribe from commodities.</CardDescription>
         </CardHeader>
         <CardContent>

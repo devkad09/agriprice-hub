@@ -148,3 +148,23 @@
     letter-spacing: -0.02em;
   }
 }
+
+.hero-background-image {
+  background-image: linear-gradient(
+    to bottom,
+    oklch(0.985 0.012 95 / 0.96) 45%,
+    oklch(0.42 0.12 145 / 0.75) 100%
+  ), url("/hero-bg.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+@media (min-width: 768px) {
+  .hero-background-image {
+    background-image: linear-gradient(
+      to right,
+      oklch(0.985 0.012 95 / 0.96) 35%,
+      oklch(0.42 0.12 145 / 0.7) 100%
+    ), url("/hero-bg.jpg");
+  }
+}

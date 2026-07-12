@@ -1,1 +1,0 @@
-import{h as e,p as t}from"./app-layout-DSxG_s43.js";function n(n,r){return t(n,e,r)}export{n as t};

@@ -18,12 +18,13 @@ CREATE TABLE IF NOT EXISTS user_roles (
   id SERIAL PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role VARCHAR(20) NOT NULL CHECK (role IN ('farmer', 'data_officer', 'admin')),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (user_id, role)
 );
 
 CREATE TABLE IF NOT EXISTS markets (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) UNIQUE NOT NULL,
   region VARCHAR(100) NOT NULL,
   location_lat DECIMAL(9, 6),
   location_lng DECIMAL(9, 6),
@@ -32,7 +33,7 @@ CREATE TABLE IF NOT EXISTS markets (
 
 CREATE TABLE IF NOT EXISTS commodities (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) UNIQUE NOT NULL,
   category VARCHAR(100) NOT NULL,
   unit_of_measure VARCHAR(50) NOT NULL,
   description TEXT

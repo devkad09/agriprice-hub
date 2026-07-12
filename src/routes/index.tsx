@@ -5,7 +5,7 @@ import { listMarkets, listCommodities } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, BarChart3, MapPin, MessageSquareText, Sprout, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, MapPin, MessageSquareText, Sprout, Smartphone, TrendingUp } from "lucide-react";
 
 const marketsQuery = queryOptions({
   queryKey: ["markets"],
@@ -65,11 +65,7 @@ function Home() {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-leaf)" }} />
-      <div
-        className="absolute -top-24 -right-24 -z-10 h-96 w-96 rounded-full opacity-30 blur-3xl"
-        style={{ background: "var(--color-harvest)" }}
-      />
+      <div className="absolute inset-0 -z-10 hero-background-image" />
       <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
         <div className="grid items-center gap-12 md:grid-cols-2">
           <div>
@@ -99,32 +95,52 @@ function Hero() {
                 <a href="#markets">Browse markets</a>
               </Button>
             </div>
-            <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">
-              <div>
-                <span className="font-display text-2xl font-bold text-foreground">5</span> markets
+            
+            {/* Stat Row with Icons */}
+            <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <MapPin className="h-4.5 w-4.5" />
+                </span>
+                <div>
+                  <span className="font-display text-base font-bold text-foreground block leading-tight">5</span>
+                  <span className="text-xs">markets</span>
+                </div>
               </div>
-              <div className="h-8 w-px bg-border" />
-              <div>
-                <span className="font-display text-2xl font-bold text-foreground">20</span>{" "}
-                commodities
+              <div className="h-8 w-px bg-border hidden sm:block" />
+              <div className="flex items-center gap-2">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <Sprout className="h-4.5 w-4.5" />
+                </span>
+                <div>
+                  <span className="font-display text-base font-bold text-foreground block leading-tight">20</span>
+                  <span className="text-xs">commodities</span>
+                </div>
               </div>
-              <div className="h-8 w-px bg-border" />
-              <div>
-                <span className="font-display text-2xl font-bold text-foreground">SMS</span> alerts
+              <div className="h-8 w-px bg-border hidden sm:block" />
+              <div className="flex items-center gap-2">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <Smartphone className="h-4.5 w-4.5" />
+                </span>
+                <div>
+                  <span className="font-display text-base font-bold text-foreground block leading-tight">SMS</span>
+                  <span className="text-xs">alerts</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="relative">
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-hero)]">
+          <div className="relative flex justify-center md:justify-end">
+            {/* Standalone Today's Price Preview Card */}
+            <div className="w-full max-w-[380px] rounded-2xl border border-border bg-card/90 backdrop-blur-md p-6 shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                     Today · Makola Market
                   </p>
-                  <p className="font-display text-lg font-semibold">Tomatoes (crate)</p>
+                  <p className="font-display text-lg font-semibold mt-1">Tomatoes (crate)</p>
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
                   <TrendingUp className="h-3 w-3" /> +4.2%
                 </span>
               </div>
@@ -173,28 +189,45 @@ function Features() {
   return (
     <section id="features" className="border-t border-border/60 bg-background py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-          Built for the way Ghana farms.
-        </h2>
-        <p className="mt-3 max-w-2xl text-muted-foreground">
-          AgriFarm puts market information in every farmer's hand — from the smallholder in
-          Bolgatanga to traders in Accra.
-        </p>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {items.map(({ icon: Icon, title, body }) => (
-            <Card
-              key={title}
-              className="border-border/60 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
-            >
-              <CardContent className="p-6">
-                <span className="grid h-11 w-11 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{body}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid gap-12 lg:grid-cols-3">
+          <div className="lg:col-span-1 flex flex-col justify-between">
+            <div>
+              <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
+                Built for the way Ghana farms.
+              </h2>
+              <p className="mt-4 text-muted-foreground leading-relaxed">
+                AgriFarm puts real-time market information in every farmer's hand — from the smallholder in
+                Bolgatanga to traders in Accra's busiest hubs.
+              </p>
+            </div>
+            
+            {/* Supporting Illustration */}
+            <div className="mt-8 hidden lg:block overflow-hidden rounded-2xl border border-border/60 bg-muted aspect-[3/2] shadow-[var(--shadow-card)]">
+              <img
+                src="/hero-bg.jpg"
+                alt="Ghanaian farmland showing growing crops"
+                className="h-full w-full object-cover opacity-90 transition-opacity duration-300 hover:opacity-100"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          
+          <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
+            {items.map(({ icon: Icon, title, body }) => (
+              <Card
+                key={title}
+                className="border-border/60 shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+              >
+                <CardContent className="p-6">
+                  <span className="grid h-11 w-11 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{body}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </section>
