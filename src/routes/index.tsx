@@ -64,7 +64,7 @@ function Home() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden isolate">
       <div className="absolute inset-0 -z-10 hero-background-image" />
       <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
         <div className="grid items-center gap-12 md:grid-cols-2">
@@ -234,6 +234,16 @@ function Features() {
   );
 }
 
+function getMarketImage(name: string) {
+  const normalized = name.toLowerCase();
+  if (normalized.includes("makola")) return "/makola-bg.png";
+  if (normalized.includes("kumasi")) return "/kumasi-bg.png";
+  if (normalized.includes("kejetia")) return "/kejetia-bg.png";
+  if (normalized.includes("techiman")) return "/techiman-bg.png";
+  if (normalized.includes("tamale")) return "/tamale-bg.png";
+  return "/hero-bg.jpg";
+}
+
 function MarketsSection() {
   const { data } = useSuspenseQuery(marketsQuery);
   return (
@@ -251,39 +261,53 @@ function MarketsSection() {
             </p>
           </div>
         </div>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((m) => (
             <Card
               key={m.id}
-              className="group border-border/60 bg-card/90 backdrop-blur shadow-[var(--shadow-card)]"
+              className="group relative overflow-hidden isolate border-none shadow-[var(--shadow-card)] text-white min-h-[220px] flex flex-col justify-between"
             >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
+              {/* Background Image with Hover zoom */}
+              <div
+                className="absolute inset-0 -z-20 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                style={{ backgroundImage: `url(${getMarketImage(m.name)})` }}
+              />
+              {/* Dark Overlay for text contrast */}
+              <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/90 via-black/55 to-black/35" />
+
+              <CardContent className="p-6 h-full flex flex-col justify-between">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="font-display text-lg font-semibold">{m.name}</h3>
-                    <p className="mt-0.5 text-sm text-muted-foreground">{m.region} Region</p>
+                    <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                      {m.name}
+                    </h3>
+                    <p className="mt-0.5 text-sm text-zinc-300 font-medium">
+                      {m.region} Region
+                    </p>
                     {m.location_lat != null && m.location_lng != null && (
-                      <>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Coordinates: {Number(m.location_lat).toFixed(3)}, {Number(m.location_lng).toFixed(3)}
+                      <div className="mt-2 flex flex-col gap-1.5">
+                        <p className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase">
+                          Lat: {Number(m.location_lat).toFixed(4)} · Lng: {Number(m.location_lng).toFixed(4)}
                         </p>
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${m.location_lat},${m.location_lng}`}
                           target="_blank"
                           rel="noreferrer noopener"
-                          className="mt-1 inline-block text-xs text-primary hover:underline"
+                          className="inline-flex w-fit items-center gap-1 text-[11px] font-medium text-white bg-white/10 hover:bg-white/20 transition-colors px-2 py-0.5 rounded backdrop-blur border border-white/10"
                         >
                           View on Google Maps
                         </a>
-                      </>
+                      </div>
                     )}
                   </div>
-                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <MapPin className="h-4 w-4" />
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur transition-colors group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary">
+                    <MapPin className="h-4.5 w-4.5" />
                   </span>
                 </div>
                 {m.description && (
-                  <p className="mt-3 text-sm text-muted-foreground">{m.description}</p>
+                  <p className="mt-4 text-sm text-zinc-200 line-clamp-2 leading-relaxed">
+                    {m.description}
+                  </p>
                 )}
               </CardContent>
             </Card>
