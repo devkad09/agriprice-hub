@@ -233,81 +233,13 @@ exports.updateProfile = async (req, res) => {
     }
 
     return res.json({ success: true, message: "Profile updated successfully", data: result.rows[0] });
+
   } catch (err) {
     console.error("[Auth] updateProfile error:", err);
     return res.status(500).json({ success: false, message: "Failed to update profile", error: err.message });
   }
 };
 
-exports.seedPricesTemp = async (req, res) => {
-  const commodities = [
-    { id: 1, base: 12.0 },
-    { id: 2, base: 8.0 },
-    { id: 3, base: 15.0 },
-    { id: 4, base: 6.0 },
-    { id: 5, base: 5.0 },
-    { id: 6, base: 25.0 },
-    { id: 7, base: 4.0 },
-    { id: 8, base: 7.0 },
-    { id: 9, base: 8.0 },
-    { id: 10, base: 10.0 },
-    { id: 11, base: 6.5 },
-    { id: 12, base: 18.0 },
-    { id: 13, base: 9.0 },
-    { id: 14, base: 8.5 },
-    { id: 15, base: 14.0 },
-    { id: 16, base: 12.0 },
-    { id: 17, base: 11.0 },
-    { id: 18, base: 15.0 },
-    { id: 19, base: 5.5 },
-    { id: 20, base: 7.5 },
-  ];
-
-  const markets = [1, 2, 3, 4, 5];
-
-  try {
-    await pool.query("DELETE FROM prices");
-
-    const insertValues = [];
-    const now = new Date();
-
-    for (let d = 90; d >= 0; d--) {
-      const date = new Date(now);
-      date.setDate(now.getDate() - d);
-      const dateStr = date.toISOString().slice(0, 10);
-
-      for (const commodity of commodities) {
-        for (const marketId of markets) {
-          const marketModifier = 0.9 + marketId * 0.05;
-          const timeModifier = Math.sin(d / 10) * 0.15;
-          const randomNoise = (Math.random() - 0.5) * 0.05;
-
-          let price = commodity.base * marketModifier * (1 + timeModifier + randomNoise);
-          price = Math.max(0.5, parseFloat(price.toFixed(2)));
-
-          insertValues.push(`(${commodity.id}, ${marketId}, ${price}, '${dateStr}', 1)`);
-        }
-      }
-    }
-
-    const batchSize = 1000;
-    for (let i = 0; i < insertValues.length; i += batchSize) {
-      const batch = insertValues.slice(i, i + batchSize);
-      const queryStr = `
-        INSERT INTO prices (commodity_id, market_id, price_ghs, date_recorded, recorded_by)
-        VALUES ${batch.join(", ")}
-      `;
-      await pool.query(queryStr);
-    }
-
-    return res.json({
-      success: true,
-      message: `Seeded ${insertValues.length} price records successfully!`,
-    });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-};
 
 
 
