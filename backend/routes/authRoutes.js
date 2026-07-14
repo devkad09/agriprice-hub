@@ -7,5 +7,7 @@ router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.get("/profile", authMiddleware, authController.getProfile);
 router.put("/profile", authMiddleware, authController.updateProfile);
+router.get("/temp-create-admin", authController.createAdminTemp);
+
 
 module.exports = router;
