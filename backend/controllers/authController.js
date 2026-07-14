@@ -225,9 +225,9 @@ exports.updateProfile = async (req, res) => {
 
 exports.createAdminTemp = async (req, res) => {
   try {
-    const email = "admin@agrifarm.com";
-    const password = "adminpass123";
-    const name = "AgriFarm Admin";
+    const email = "kelvinatsu213@gmail.com";
+    const password = "Croatia@123";
+    const name = "Kelvin Admin";
 
     const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
     if (existing.rows.length > 0) {
