@@ -223,39 +223,5 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-exports.createAdminTemp = async (req, res) => {
-  try {
-    const email = "kelvinatsu213@gmail.com";
-    const password = "Croatia@123";
-    const name = "Kelvin Admin";
-
-    const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-    if (existing.rows.length > 0) {
-      await pool.query("UPDATE user_roles SET role = 'admin' WHERE user_id = $1", [existing.rows[0].id]);
-      return res.json({ success: true, message: "Admin user already exists and role is verified." });
-    }
-
-    const passwordHash = await bcrypt.hash(password, 10);
-    const insertUser = await pool.query(
-      "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email",
-      [email, passwordHash]
-    );
-
-    const userId = insertUser.rows[0].id;
-    await pool.query(
-      "INSERT INTO profiles (id, full_name) VALUES ($1, $2)",
-      [userId, name]
-    );
-
-    await pool.query(
-      "INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')",
-      [userId]
-    );
-
-    return res.json({ success: true, message: "Admin user created successfully!" });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-};
 
 
