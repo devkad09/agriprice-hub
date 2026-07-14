@@ -16,17 +16,21 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Automatically subscribe all existing users to all commodities at startup
+// Database migrations & auto-subscriptions at startup
 query(`
-  INSERT INTO sms_subscriptions (user_id, commodity_id, frequency, active)
-  SELECT p.id, c.id, 'daily', true
-  FROM profiles p
-  CROSS JOIN commodities c
-  ON CONFLICT (user_id, commodity_id) DO NOTHING;
+  ALTER TABLE prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 `).then(() => {
-  console.log("[Db] Auto-subscribed all existing users to all commodities.");
+  return query(`
+    INSERT INTO sms_subscriptions (user_id, commodity_id, frequency, active)
+    SELECT p.id, c.id, 'daily', true
+    FROM profiles p
+    CROSS JOIN commodities c
+    ON CONFLICT (user_id, commodity_id) DO NOTHING;
+  `);
+}).then(() => {
+  console.log("[Db] Startup migrations and subscriptions completed.");
 }).catch((err) => {
-  console.error("[Db] Auto-subscribe startup error:", err);
+  console.error("[Db] Startup initialization error:", err);
 });
 
 

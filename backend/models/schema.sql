@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS prices (
   market_id INT NOT NULL REFERENCES markets(id) ON DELETE CASCADE,
   price_ghs DECIMAL(12, 2) NOT NULL,
   date_recorded DATE NOT NULL,
-  recorded_by INT REFERENCES users(id) ON DELETE SET NULL
+  recorded_by INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS sms_subscriptions (
