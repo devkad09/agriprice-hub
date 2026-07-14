@@ -3,7 +3,7 @@ import { t as AppLayout } from "./app-layout-D45RjkTW.js";
 import { n as CardContent, o as Button, t as Card } from "./card-COiwJCYN.js";
 import { Suspense } from "react";
 import { Link } from "@tanstack/react-router";
-import { Fragment, jsx, jsxs } from "react/jsx-runtime";
+import { jsx, jsxs } from "react/jsx-runtime";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, BarChart3, MapPin, MessageSquareText, Smartphone, Sprout, TrendingUp } from "lucide-react";
 //#region src/routes/index.tsx?tsr-split=component
@@ -26,7 +26,7 @@ function Home() {
 }
 function Hero() {
 	return /* @__PURE__ */ jsxs("section", {
-		className: "relative overflow-hidden",
+		className: "relative overflow-hidden isolate",
 		children: [/* @__PURE__ */ jsx("div", { className: "absolute inset-0 -z-10 hero-background-image" }), /* @__PURE__ */ jsx("div", {
 			className: "mx-auto max-w-6xl px-4 py-20 md:py-28",
 			children: /* @__PURE__ */ jsxs("div", {
@@ -242,6 +242,15 @@ function Features() {
 		})
 	});
 }
+function getMarketImage(name) {
+	const normalized = name.toLowerCase();
+	if (normalized.includes("makola")) return "/makola-bg.png";
+	if (normalized.includes("kumasi")) return "/kumasi-bg.png";
+	if (normalized.includes("kejetia")) return "/kejetia-bg.png";
+	if (normalized.includes("techiman")) return "/techiman-bg.png";
+	if (normalized.includes("tamale")) return "/tamale-bg.png";
+	return "/hero-bg.jpg";
+}
 function MarketsSection() {
 	const { data } = useSuspenseQuery(marketsQuery);
 	return /* @__PURE__ */ jsx("section", {
@@ -260,46 +269,56 @@ function MarketsSection() {
 					children: "Prices flow in daily from these regional hubs."
 				})] })
 			}), /* @__PURE__ */ jsx("div", {
-				className: "mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3",
-				children: data.map((m) => /* @__PURE__ */ jsx(Card, {
-					className: "group border-border/60 bg-card/90 backdrop-blur shadow-[var(--shadow-card)]",
-					children: /* @__PURE__ */ jsxs(CardContent, {
-						className: "p-6",
-						children: [/* @__PURE__ */ jsxs("div", {
-							className: "flex items-start justify-between",
-							children: [/* @__PURE__ */ jsxs("div", { children: [
-								/* @__PURE__ */ jsx("h3", {
-									className: "font-display text-lg font-semibold",
-									children: m.name
-								}),
-								/* @__PURE__ */ jsxs("p", {
-									className: "mt-0.5 text-sm text-muted-foreground",
-									children: [m.region, " Region"]
-								}),
-								m.location_lat != null && m.location_lng != null && /* @__PURE__ */ jsxs(Fragment, { children: [/* @__PURE__ */ jsxs("p", {
-									className: "mt-1 text-xs text-muted-foreground",
-									children: [
-										"Coordinates: ",
-										Number(m.location_lat).toFixed(3),
-										", ",
-										Number(m.location_lng).toFixed(3)
-									]
-								}), /* @__PURE__ */ jsx("a", {
-									href: `https://www.google.com/maps/search/?api=1&query=${m.location_lat},${m.location_lng}`,
-									target: "_blank",
-									rel: "noreferrer noopener",
-									className: "mt-1 inline-block text-xs text-primary hover:underline",
-									children: "View on Google Maps"
-								})] })
-							] }), /* @__PURE__ */ jsx("span", {
-								className: "grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground",
-								children: /* @__PURE__ */ jsx(MapPin, { className: "h-4 w-4" })
+				className: "mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3",
+				children: data.map((m) => /* @__PURE__ */ jsxs(Card, {
+					className: "group relative overflow-hidden isolate border-none shadow-[var(--shadow-card)] text-white min-h-[220px] flex flex-col justify-between",
+					children: [
+						/* @__PURE__ */ jsx("div", {
+							className: "absolute inset-0 -z-20 bg-cover bg-center transition-transform duration-500 group-hover:scale-105",
+							style: { backgroundImage: `url(${getMarketImage(m.name)})` }
+						}),
+						/* @__PURE__ */ jsx("div", { className: "absolute inset-0 -z-10 bg-gradient-to-t from-black/90 via-black/55 to-black/35" }),
+						/* @__PURE__ */ jsxs(CardContent, {
+							className: "p-6 h-full flex flex-col justify-between",
+							children: [/* @__PURE__ */ jsxs("div", {
+								className: "flex items-start justify-between gap-4",
+								children: [/* @__PURE__ */ jsxs("div", { children: [
+									/* @__PURE__ */ jsx("h3", {
+										className: "font-display text-lg font-bold text-white tracking-tight",
+										children: m.name
+									}),
+									/* @__PURE__ */ jsxs("p", {
+										className: "mt-0.5 text-sm text-zinc-300 font-medium",
+										children: [m.region, " Region"]
+									}),
+									m.location_lat != null && m.location_lng != null && /* @__PURE__ */ jsxs("div", {
+										className: "mt-2 flex flex-col gap-1.5",
+										children: [/* @__PURE__ */ jsxs("p", {
+											className: "text-[10px] text-zinc-400 font-mono tracking-wider uppercase",
+											children: [
+												"Lat: ",
+												Number(m.location_lat).toFixed(4),
+												" · Lng: ",
+												Number(m.location_lng).toFixed(4)
+											]
+										}), /* @__PURE__ */ jsx("a", {
+											href: `https://www.google.com/maps/search/?api=1&query=${m.location_lat},${m.location_lng}`,
+											target: "_blank",
+											rel: "noreferrer noopener",
+											className: "inline-flex w-fit items-center gap-1 text-[11px] font-medium text-white bg-white/10 hover:bg-white/20 transition-colors px-2 py-0.5 rounded backdrop-blur border border-white/10",
+											children: "View on Google Maps"
+										})]
+									})
+								] }), /* @__PURE__ */ jsx("span", {
+									className: "grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur transition-colors group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary",
+									children: /* @__PURE__ */ jsx(MapPin, { className: "h-4.5 w-4.5" })
+								})]
+							}), m.description && /* @__PURE__ */ jsx("p", {
+								className: "mt-4 text-sm text-zinc-200 line-clamp-2 leading-relaxed",
+								children: m.description
 							})]
-						}), m.description && /* @__PURE__ */ jsx("p", {
-							className: "mt-3 text-sm text-muted-foreground",
-							children: m.description
-						})]
-					})
+						})
+					]
 				}, m.id))
 			})]
 		})

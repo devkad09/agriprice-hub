@@ -6,7 +6,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 //#region src/styles.css?url
-var styles_default = "/assets/styles-D8XdOUch.css";
+var styles_default = "/assets/styles-DiFGHUBC.css";
 //#endregion
 //#region src/components/ui/sonner.tsx
 var Toaster$1 = ({ ...props }) => {
@@ -233,7 +233,7 @@ var Route$3 = createFileRoute("/admin")({
 //#endregion
 //#region src/routes/index.tsx
 var $$splitErrorComponentImporter = () => import("./routes-Dlh6uesq.js");
-var $$splitComponentImporter$2 = () => import("./routes-B5SswePm.js");
+var $$splitComponentImporter$2 = () => import("./routes-DbruURct.js");
 var Route$2 = createFileRoute("/")({
 	head: () => ({ meta: [{ title: "AgriFarm — Live Market Prices for Ghanaian Farmers" }, {
 		name: "description",

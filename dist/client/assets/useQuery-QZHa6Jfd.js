@@ -1,0 +1,1 @@
+import{h as e,p as t}from"./app-layout-B5QlcPwf.js";function n(n,r){return t(n,e,r)}export{n as t};
