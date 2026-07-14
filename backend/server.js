@@ -63,4 +63,8 @@ const startServer = (port) => {
   });
 };
 
-startServer(requestedPort);
+if (require.main === module) {
+  startServer(requestedPort);
+}
+
+module.exports = app;
