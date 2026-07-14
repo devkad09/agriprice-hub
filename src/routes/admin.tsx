@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/use-auth";
+import { BACKEND_URL } from "@/lib/backend-prices";
 import { useRole } from "@/lib/use-role";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,7 +153,7 @@ function UserManagementTab() {
     queryKey: ["admin-users-list"],
     queryFn: async () => {
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/admin/users", {
+      const res = await fetch(`${BACKEND_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch users");
@@ -166,7 +167,7 @@ function UserManagementTab() {
       role: "farmer" | "data_officer" | "admin";
     }) => {
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/admin/update-role", {
+      const res = await fetch(`${BACKEND_URL}/api/admin/update-role`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -293,7 +294,7 @@ function AuditLogsTab() {
     queryKey: ["admin-audit-logs"],
     queryFn: async () => {
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/admin/audit-log", {
+      const res = await fetch(`${BACKEND_URL}/api/admin/audit-log`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch audit logs");
@@ -441,7 +442,7 @@ function BulkImportTab() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const res = await fetch("/api/admin/bulk-import", {
+      const res = await fetch(`${BACKEND_URL}/api/admin/bulk-import`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -693,7 +694,7 @@ function SmsBroadcastTab() {
     mutationFn: async () => {
       setTriggering(true);
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/sms/send-alerts", {
+      const res = await fetch(`${BACKEND_URL}/api/sms/send-alerts`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

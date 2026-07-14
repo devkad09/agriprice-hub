@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { getPrices } from "@/lib/backend-prices";
+import { getPrices, BACKEND_URL } from "@/lib/backend-prices";
 import { useAuth } from "@/lib/use-auth";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,7 +75,7 @@ function StatsCards() {
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/admin/stats", {
+      const res = await fetch(`${BACKEND_URL}/api/admin/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch stats");

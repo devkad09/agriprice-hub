@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/use-auth";
-import { listCommodities } from "@/lib/backend-prices";
+import { listCommodities, BACKEND_URL } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -162,7 +162,7 @@ function PhoneVerificationSection() {
     queryFn: async () => {
       if (!user) return null;
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/auth/profile", {
+      const res = await fetch(`${BACKEND_URL}/api/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch profile");
@@ -181,7 +181,7 @@ function PhoneVerificationSection() {
   const updatePhoneMutation = useMutation({
     mutationFn: async (newPhone: string) => {
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/auth/profile", {
+      const res = await fetch(`${BACKEND_URL}/api/auth/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -335,7 +335,7 @@ function AddSubscriptionForm() {
         throw new Error("Please set your phone number first.");
       }
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/sms/subscribe", {
+      const res = await fetch(`${BACKEND_URL}/api/sms/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -445,7 +445,7 @@ function SubscriptionsList() {
     queryKey: ["user-subscriptions"],
     queryFn: async () => {
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/sms/subscriptions", {
+      const res = await fetch(`${BACKEND_URL}/api/sms/subscriptions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch subscriptions");
@@ -460,7 +460,7 @@ function SubscriptionsList() {
         if (!profile?.phone) {
           throw new Error("Please set your phone number first.");
         }
-        const res = await fetch("/api/sms/subscribe", {
+        const res = await fetch(`${BACKEND_URL}/api/sms/subscribe`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -477,7 +477,7 @@ function SubscriptionsList() {
           throw new Error(err.message || err.error || "Failed to activate subscription");
         }
       } else {
-        const res = await fetch("/api/sms/unsubscribe", {
+        const res = await fetch(`${BACKEND_URL}/api/sms/unsubscribe`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -506,7 +506,7 @@ function SubscriptionsList() {
   const deleteMutation = useMutation({
     mutationFn: async (commodityId: string) => {
       const token = localStorage.getItem("AGRIFARM_AUTH_TOKEN");
-      const res = await fetch("/api/sms/unsubscribe", {
+      const res = await fetch(`${BACKEND_URL}/api/sms/unsubscribe`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

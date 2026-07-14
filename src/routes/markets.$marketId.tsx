@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { getPrices } from "@/lib/backend-prices";
+import { getPrices, BACKEND_URL } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ function MarketContent() {
   const { data: market } = useQuery({
     queryKey: ["market-detail", marketId],
     queryFn: async () => {
-      const response = await fetch(`/api/markets/${marketId}`);
+      const response = await fetch(`${BACKEND_URL}/api/markets/${marketId}`);
       if (!response.ok) throw new Error("Market not found");
       return response.json();
     },

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sprout, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { BACKEND_URL } from "@/lib/backend-prices";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -77,7 +78,7 @@ function AuthPage() {
 
     setBusy(true);
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +118,7 @@ function AuthPage() {
     }
     setBusy(true);
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

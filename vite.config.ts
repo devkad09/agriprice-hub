@@ -19,7 +19,11 @@ export default defineConfig({
       },
       server: { entry: "server" },
     }),
-    nitro(),
+    nitro({
+      routeRules: {
+        "/api/**": { proxy: "https://backend-ten-mocha-97.vercel.app/api/**" },
+      },
+    }),
     react(),
     tailwindcss(),
   ],

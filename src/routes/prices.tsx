@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { useState, Suspense } from "react";
-import { listMarkets, listCommodities } from "@/lib/backend-prices";
+import { listMarkets, listCommodities, BACKEND_URL } from "@/lib/backend-prices";
 import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,7 +99,7 @@ function PricesContent() {
     queryKey: ["price-trends", selectedCommodity, selectedRange],
     queryFn: async () => {
       if (!selectedCommodity) return [];
-      const response = await fetch(`/api/prices/trends?commodity_id=${selectedCommodity}&days=${selectedRange}`);
+      const response = await fetch(`${BACKEND_URL}/api/prices/trends?commodity_id=${selectedCommodity}&days=${selectedRange}`);
       if (!response.ok) throw new Error("Failed to fetch price trends");
       return response.json();
     },
@@ -110,7 +110,7 @@ function PricesContent() {
     queryKey: ["price-compare", selectedCommodity],
     queryFn: async () => {
       if (!selectedCommodity) return [];
-      const response = await fetch(`/api/prices/compare?commodity_id=${selectedCommodity}`);
+      const response = await fetch(`${BACKEND_URL}/api/prices/compare?commodity_id=${selectedCommodity}`);
       if (!response.ok) throw new Error("Failed to fetch comparisons");
       const rows = await response.json();
       return rows.map((r: any) => ({

@@ -22,11 +22,12 @@ function buildHeaders(options: BackendFetchOptions = {}) {
   return headers;
 }
 
-async function fetchJson<T>(path: string, options: BackendFetchOptions = {}): Promise<T> {
-  const baseUrl = (import.meta.env.VITE_BACKEND_URL as string) || "http://localhost:5001";
-  const absoluteUrl = path.startsWith("http") ? path : `${baseUrl}${path}`;
+export const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string) || "http://localhost:5001";
 
-  console.log(`[fetchJson] typeof window: ${typeof window}, path: ${path}, baseUrl: "${baseUrl}", absoluteUrl: "${absoluteUrl}"`);
+async function fetchJson<T>(path: string, options: BackendFetchOptions = {}): Promise<T> {
+  const absoluteUrl = path.startsWith("http") ? path : `${BACKEND_URL}${path}`;
+
+  console.log(`[fetchJson] typeof window: ${typeof window}, path: ${path}, BACKEND_URL: "${BACKEND_URL}", absoluteUrl: "${absoluteUrl}"`);
 
   const init: RequestInit = {
     ...options,

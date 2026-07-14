@@ -14,6 +14,8 @@ type BackendUser = {
   created_at?: string;
 };
 
+import { BACKEND_URL } from "./backend-prices";
+
 export type AuthSession = {
   access_token: string;
   user: BackendUser;
@@ -26,7 +28,7 @@ export function useAuth() {
 
   async function loadProfile(token: string) {
     try {
-      const response = await fetch("/api/auth/profile", {
+      const response = await fetch(`${BACKEND_URL}/api/auth/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
