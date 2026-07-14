@@ -1,4 +1,5 @@
 const { pool } = require("../config/db");
+const { broadcastPriceAlerts } = require("../services/smsService");
 
 exports.getAllPrices = async (req, res) => {
   try {
@@ -125,6 +126,11 @@ exports.addPrice = async (req, res) => {
       [userId, "create", "prices", recordId, JSON.stringify(details)],
     );
 
+    // Asynchronously trigger SMS alerts broadcast
+    broadcastPriceAlerts().catch((err) =>
+      console.error("[SMS Broadcast] Auto-broadcast error:", err),
+    );
+
     return res.status(201).json(addedRow);
   } catch (err) {
     console.error(err);
@@ -170,6 +176,11 @@ exports.updatePrice = async (req, res) => {
     await pool.query(
       `INSERT INTO audit_log (user_id, action, table_name, record_id, details) VALUES ($1, $2, $3, $4, $5)`,
       [userId, "update", "prices", id, JSON.stringify({ price_ghs, date_recorded })],
+    );
+
+    // Asynchronously trigger SMS alerts broadcast
+    broadcastPriceAlerts().catch((err) =>
+      console.error("[SMS Broadcast] Auto-broadcast error:", err),
     );
 
     return res.json(updatedRow);

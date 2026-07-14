@@ -1,4 +1,5 @@
 const { pool } = require("../config/db");
+const { broadcastPriceAlerts } = require("../services/smsService");
 const csv = require("csv-parser");
 const stream = require("stream");
 
@@ -109,6 +110,12 @@ exports.bulkImportPrices = async (req, res) => {
           } catch (err) {
             errors.push({ index: i, row, error: err.message });
           }
+        }
+
+        if (imported.length > 0) {
+          broadcastPriceAlerts().catch((err) =>
+            console.error("[SMS Broadcast] Bulk auto-broadcast error:", err),
+          );
         }
 
         return res.json({

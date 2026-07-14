@@ -16,6 +16,20 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Automatically subscribe all existing users to all commodities at startup
+query(`
+  INSERT INTO sms_subscriptions (user_id, commodity_id, frequency, active)
+  SELECT p.id, c.id, 'daily', true
+  FROM profiles p
+  CROSS JOIN commodities c
+  ON CONFLICT (user_id, commodity_id) DO NOTHING;
+`).then(() => {
+  console.log("[Db] Auto-subscribed all existing users to all commodities.");
+}).catch((err) => {
+  console.error("[Db] Auto-subscribe startup error:", err);
+});
+
+
 // Register API routes
 const authRoutes = require("./routes/authRoutes");
 const priceRoutes = require("./routes/priceRoutes");

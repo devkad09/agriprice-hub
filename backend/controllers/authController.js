@@ -47,6 +47,22 @@ exports.register = async (req, res) => {
       [userId, userRole],
     );
 
+    // Auto-subscribe the user to all commodities for SMS alerts
+    try {
+      const commoditiesRes = await pool.query("SELECT id FROM commodities");
+      for (const commodity of commoditiesRes.rows) {
+        await pool.query(
+          `INSERT INTO sms_subscriptions (user_id, commodity_id, frequency, active)
+           VALUES ($1, $2, 'daily', true)
+           ON CONFLICT (user_id, commodity_id) DO NOTHING`,
+          [userId, commodity.id]
+        );
+      }
+    } catch (subErr) {
+      console.error("[Auth] Auto-subscribe error:", subErr);
+    }
+
+
     const token = jwt.sign(
       { user_id: userId, email: newUser.email, role: userRole, name },
       JWT_SECRET,
