@@ -113,9 +113,11 @@ exports.bulkImportPrices = async (req, res) => {
         }
 
         if (imported.length > 0) {
-          broadcastPriceAlerts().catch((err) =>
-            console.error("[SMS Broadcast] Bulk auto-broadcast error:", err),
-          );
+          try {
+            await broadcastPriceAlerts();
+          } catch (err) {
+            console.error("[SMS Broadcast] Bulk auto-broadcast error:", err);
+          }
         }
 
         return res.json({

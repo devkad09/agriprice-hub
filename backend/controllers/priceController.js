@@ -126,10 +126,12 @@ exports.addPrice = async (req, res) => {
       [userId, "create", "prices", recordId, JSON.stringify(details)],
     );
 
-    // Asynchronously trigger SMS alerts broadcast
-    broadcastPriceAlerts().catch((err) =>
-      console.error("[SMS Broadcast] Auto-broadcast error:", err),
-    );
+    // Trigger SMS alerts broadcast and await it to ensure completion in serverless (Vercel) environments
+    try {
+      await broadcastPriceAlerts();
+    } catch (err) {
+      console.error("[SMS Broadcast] Auto-broadcast error:", err);
+    }
 
     return res.status(201).json(addedRow);
   } catch (err) {
@@ -178,10 +180,12 @@ exports.updatePrice = async (req, res) => {
       [userId, "update", "prices", id, JSON.stringify({ price_ghs, date_recorded })],
     );
 
-    // Asynchronously trigger SMS alerts broadcast
-    broadcastPriceAlerts().catch((err) =>
-      console.error("[SMS Broadcast] Auto-broadcast error:", err),
-    );
+    // Trigger SMS alerts broadcast and await it to ensure completion in serverless (Vercel) environments
+    try {
+      await broadcastPriceAlerts();
+    } catch (err) {
+      console.error("[SMS Broadcast] Auto-broadcast error:", err);
+    }
 
     return res.json(updatedRow);
   } catch (err) {
