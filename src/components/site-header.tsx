@@ -13,6 +13,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function SiteHeader() {
   const { user, loading } = useAuth();
@@ -119,6 +120,7 @@ export function SiteHeader() {
 
         {/* Right Section: Auth & Mobile Menu Trigger */}
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <div className="hidden items-center gap-2 md:flex">
             {loading ? null : user ? (
               <>
