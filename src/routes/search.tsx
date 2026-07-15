@@ -193,7 +193,7 @@ function SearchPage() {
                     id="search-category"
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="flex h-11 lg:h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="all">All Categories</option>
                     {categories.map((cat) => (
@@ -211,7 +211,7 @@ function SearchPage() {
                     id="search-market"
                     value={selectedMarket}
                     onChange={(e) => setSelectedMarket(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="flex h-11 lg:h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="all">All Markets</option>
                     {markets?.map((m) => (
@@ -251,7 +251,7 @@ function SearchPage() {
                     id="search-sort"
                     value={selectedSort}
                     onChange={(e) => setSelectedSort(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="flex h-11 lg:h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="date-desc">Date (Newest first)</option>
                     <option value="date-asc">Date (Oldest first)</option>

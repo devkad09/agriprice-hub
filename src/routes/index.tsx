@@ -73,7 +73,10 @@ function Hero() {
               <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Live prices across Ghana
             </span>
-            <h1 className="mt-5 font-display text-4xl font-bold leading-[1.05] tracking-tight text-foreground md:text-6xl">
+            <h1
+              className="mt-5 font-display font-bold leading-[1.05] tracking-tight text-foreground"
+              style={{ fontSize: "clamp(2.25rem, 6vw + 1rem, 3.75rem)" }}
+            >
               Know the right price <span className="text-primary">before market day.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
@@ -81,18 +84,18 @@ function Hero() {
               Kumasi, Kejetia, Techiman, and Tamale — plus SMS alerts when the price of your crop
               changes.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Button
                 asChild
                 size="lg"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="w-full sm:w-auto h-11 sm:h-10 bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                <Link to="/auth">
+                <Link to="/auth" className="justify-center">
                   Get started free <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <a href="#markets">Browse markets</a>
+              <Button asChild size="lg" variant="outline" className="w-full sm:w-auto h-11 sm:h-10">
+                <a href="#markets" className="justify-center">Browse markets</a>
               </Button>
             </div>
             
@@ -132,7 +135,7 @@ function Hero() {
 
           <div className="relative flex justify-center md:justify-end">
             {/* Standalone Today's Price Preview Card */}
-            <div className="w-full max-w-[380px] rounded-2xl border border-border bg-card/90 backdrop-blur-md p-6 shadow-2xl">
+            <div className="w-full max-w-[380px] rounded-2xl border border-border bg-card/90 backdrop-blur-md p-4 sm:p-6 shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
@@ -275,7 +278,7 @@ function MarketsSection() {
               {/* Dark Overlay for text contrast */}
               <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/90 via-black/55 to-black/35" />
 
-              <CardContent className="p-6 h-full flex flex-col justify-between">
+              <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h3 className="font-display text-lg font-bold text-white tracking-tight">
@@ -286,14 +289,14 @@ function MarketsSection() {
                     </p>
                     {m.location_lat != null && m.location_lng != null && (
                       <div className="mt-2 flex flex-col gap-1.5">
-                        <p className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase">
+                        <p className="text-[9px] sm:text-[10px] text-zinc-400 font-mono tracking-wider uppercase">
                           Lat: {Number(m.location_lat).toFixed(4)} · Lng: {Number(m.location_lng).toFixed(4)}
                         </p>
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${m.location_lat},${m.location_lng}`}
                           target="_blank"
                           rel="noreferrer noopener"
-                          className="inline-flex w-fit items-center gap-1 text-[11px] font-medium text-white bg-white/10 hover:bg-white/20 transition-colors px-2 py-0.5 rounded backdrop-blur border border-white/10"
+                          className="inline-flex w-fit items-center gap-1 text-[11px] font-medium text-white bg-white/10 hover:bg-white/20 transition-colors px-3 py-2.5 md:px-2 md:py-0.5 rounded backdrop-blur border border-white/10"
                         >
                           View on Google Maps
                         </a>
@@ -331,11 +334,11 @@ function CommoditiesSection() {
         <p className="mt-2 max-w-xl text-muted-foreground">
           From staples to cash crops — the prices farmers actually need.
         </p>
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 columns-1 sm:columns-2 lg:columns-4 gap-6 [column-fill:auto]">
           {Object.entries(grouped).map(([category, items]) => (
             <div
               key={category}
-              className="rounded-xl border border-border/60 bg-card p-5 shadow-[var(--shadow-card)]"
+              className="break-inside-avoid inline-block w-full mb-6 rounded-xl border border-border/60 bg-card p-5 shadow-[var(--shadow-card)]"
             >
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-primary">
                 {category}

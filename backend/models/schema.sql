@@ -69,3 +69,4 @@ CREATE TABLE IF NOT EXISTS audit_log (
   ip_address VARCHAR(45),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+

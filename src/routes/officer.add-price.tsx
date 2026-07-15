@@ -109,7 +109,7 @@ function PriceEntryForm() {
               id="entry-market"
               value={marketId}
               onChange={(e) => setMarketId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex h-11 md:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
             >
               {markets?.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -125,7 +125,7 @@ function PriceEntryForm() {
               id="entry-commodity"
               value={commodityId}
               onChange={(e) => setCommodityId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex h-11 md:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
             >
               {commodities?.map((c) => (
                 <option key={c.id} value={c.id}>

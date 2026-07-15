@@ -169,7 +169,7 @@ function PricesContent() {
                 id="commodity-select"
                 value={selectedCommodity}
                 onChange={(e) => setSelectedCommodity(e.target.value)}
-                className="flex h-9 w-56 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-11 md:h-9 w-full md:w-56 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 {commodities.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -184,14 +184,14 @@ function PricesContent() {
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Range
               </span>
-              <div className="flex gap-1">
+              <div className="grid grid-cols-4 gap-1 w-full md:flex md:w-auto">
                 {RANGES.map((r) => (
                   <Button
                     key={r.label}
                     variant={selectedRange === r.days ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedRange(r.days)}
-                    className="min-w-[3rem]"
+                    className="w-full md:min-w-[3rem] h-11 md:h-8"
                   >
                     {r.label}
                   </Button>
@@ -269,40 +269,44 @@ function PricesContent() {
               <p className="text-sm text-muted-foreground">No price data for this selection.</p>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 130)" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(v: string) => v.slice(5)}
-                />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `₵${v}`} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "0.5rem",
-                    border: "1px solid oklch(0.9 0.02 130)",
-                    fontSize: "0.8rem",
-                  }}
-                  formatter={(value: number) => [`GHS ${value.toFixed(2)}`, undefined]}
-                />
-                <Legend />
-                {activeMarketNames.map((name, i) => (
-                  <Line
-                    key={name}
-                    type="monotone"
-                    dataKey={name}
-                    stroke={
-                      CHART_COLORS[markets.findIndex((m) => m.name === name) % CHART_COLORS.length]
-                    }
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 5 }}
-                    connectNulls
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="w-full overflow-x-auto">
+              <div className="min-w-[600px] md:min-w-0 h-[320px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 130)" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(v: string) => v.slice(5)}
+                    />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `₵${v}`} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "0.5rem",
+                        border: "1px solid oklch(0.9 0.02 130)",
+                        fontSize: "0.8rem",
+                      }}
+                      formatter={(value: number) => [`GHS ${value.toFixed(2)}`, undefined]}
+                    />
+                    <Legend />
+                    {activeMarketNames.map((name, i) => (
+                      <Line
+                        key={name}
+                        type="monotone"
+                        dataKey={name}
+                        stroke={
+                          CHART_COLORS[markets.findIndex((m) => m.name === name) % CHART_COLORS.length]
+                        }
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                        activeDot={{ r: 5 }}
+                        connectNulls
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -316,23 +320,27 @@ function PricesContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={compareData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 130)" />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(v: number) => `₵${v}`}
-                />
-                <YAxis type="category" dataKey="marketName" tick={{ fontSize: 12 }} width={160} />
-                <Tooltip formatter={(value: number) => [`GHS ${value.toFixed(2)}`, "Price"]} />
-                <Bar dataKey="price" radius={[0, 6, 6, 0]}>
-                  {compareData.map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="w-full overflow-x-auto">
+              <div className="min-w-[500px] md:min-w-0 h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={compareData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 130)" />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(v: number) => `₵${v}`}
+                    />
+                    <YAxis type="category" dataKey="marketName" tick={{ fontSize: 12 }} width={160} />
+                    <Tooltip formatter={(value: number) => [`GHS ${value.toFixed(2)}`, "Price"]} />
+                    <Bar dataKey="price" radius={[0, 6, 6, 0]}>
+                      {compareData.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -47,7 +47,7 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-5 text-sm font-medium text-muted-foreground md:flex">
+        <nav className="hidden items-center gap-3 lg:gap-5 text-sm font-medium text-muted-foreground md:flex">
           <Link
             to="/"
             className="hover:text-foreground transition-colors"
@@ -124,7 +124,7 @@ export function SiteHeader() {
               <>
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-2.5 py-1.5 rounded-full border border-border/50">
                   <UserIcon className="h-3.5 w-3.5 text-primary" />
-                  <span className="max-w-[120px] truncate">{user.email}</span>
+                  <span className="hidden lg:inline max-w-[120px] truncate">{user.email}</span>
                 </span>
                 <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="h-4 w-4" />
@@ -145,7 +145,7 @@ export function SiteHeader() {
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMobileMenu}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground md:hidden"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -156,11 +156,11 @@ export function SiteHeader() {
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
         <div className="border-b border-border bg-background px-4 py-4 md:hidden shadow-lg animate-in slide-in-from-top duration-200">
-          <nav className="flex flex-col gap-4 text-sm font-medium">
+          <nav className="flex flex-col gap-2 text-sm font-medium">
             <Link
               to="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1 text-muted-foreground hover:text-foreground"
+              className="py-3 text-muted-foreground hover:text-foreground flex items-center"
               activeProps={{ className: "text-foreground font-semibold" }}
             >
               Home
@@ -169,7 +169,7 @@ export function SiteHeader() {
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-muted-foreground hover:text-foreground"
+                className="py-3 text-muted-foreground hover:text-foreground flex items-center"
                 activeProps={{ className: "text-foreground font-semibold" }}
               >
                 Dashboard
@@ -178,7 +178,7 @@ export function SiteHeader() {
             <Link
               to="/prices"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1 text-muted-foreground hover:text-foreground"
+              className="py-3 text-muted-foreground hover:text-foreground flex items-center"
               activeProps={{ className: "text-foreground font-semibold" }}
             >
               Prices
@@ -186,7 +186,7 @@ export function SiteHeader() {
             <Link
               to="/search"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1 text-muted-foreground hover:text-foreground"
+              className="py-3 text-muted-foreground hover:text-foreground flex items-center"
               activeProps={{ className: "text-foreground font-semibold" }}
             >
               Search
@@ -195,7 +195,7 @@ export function SiteHeader() {
               <Link
                 to="/subscriptions"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-muted-foreground hover:text-foreground"
+                className="py-3 text-muted-foreground hover:text-foreground flex items-center"
                 activeProps={{ className: "text-foreground font-semibold" }}
               >
                 Alerts
@@ -206,7 +206,7 @@ export function SiteHeader() {
                 <Link
                   to="/officer"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-1 text-primary hover:text-primary/95 font-medium"
+                  className="py-3 text-primary hover:text-primary/95 font-medium flex items-center"
                   activeProps={{ className: "font-semibold" }}
                 >
                   Officer Panel
@@ -214,14 +214,14 @@ export function SiteHeader() {
                 <Link
                   to="/officer/add-price"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="pl-4 py-1 text-muted-foreground hover:text-foreground text-sm"
+                  className="pl-4 py-3 text-muted-foreground hover:text-foreground text-sm flex items-center"
                 >
                   Add Price
                 </Link>
                 <Link
                   to="/officer/manage-prices"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="pl-4 py-1 text-muted-foreground hover:text-foreground text-sm"
+                  className="pl-4 py-3 text-muted-foreground hover:text-foreground text-sm flex items-center"
                 >
                   Manage Prices
                 </Link>

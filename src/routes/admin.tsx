@@ -268,7 +268,7 @@ function UserManagementTab() {
                           })
                         }
                         disabled={changeRoleMutation.isPending}
-                        className="h-8 rounded-md border border-input bg-background px-2.5 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring font-medium"
+                        className="h-11 md:h-8 rounded-md border border-input bg-background px-2.5 py-1 text-sm md:text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring font-medium"
                       >
                         <option value="farmer">Farmer</option>
                         <option value="data_officer">Data Officer</option>

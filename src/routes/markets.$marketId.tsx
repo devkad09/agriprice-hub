@@ -128,7 +128,7 @@ function MarketContent() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
+      <Button asChild variant="ghost" className="mb-4 -ml-2 h-11 md:h-8 text-sm md:text-xs">
         <Link to="/">
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to markets
         </Link>
@@ -235,7 +235,7 @@ function MarketContent() {
                         </td>
                         <td className="px-6 py-4 text-muted-foreground">{row.date}</td>
                         <td className="px-6 py-4">
-                          <Button asChild variant="ghost" size="sm">
+                          <Button asChild variant="ghost" size="icon" className="h-11 w-11 md:h-8 md:w-8">
                             <Link to="/prices" search={{ commodity: row.commodityId }}>
                               <BarChart3 className="h-3.5 w-3.5" />
                             </Link>

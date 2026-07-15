@@ -387,7 +387,7 @@ function AddSubscriptionForm() {
               id="sub-commodity"
               value={commodityId}
               onChange={(e) => setCommodityId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex h-11 md:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
             >
               {commodities?.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -403,7 +403,7 @@ function AddSubscriptionForm() {
               id="sub-frequency"
               value={frequency}
               onChange={(e) => setFrequency(e.target.value as "daily" | "weekly")}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex h-11 md:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="daily">Daily price update</option>
               <option value="weekly">Weekly price digest</option>
@@ -596,7 +596,7 @@ function SubscriptionsList() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+                      className="h-11 w-11 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
                       onClick={() => setDeletingSub(sub)}
                     >
                       <Trash2 className="h-4.5 w-4.5" />
