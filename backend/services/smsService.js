@@ -2,7 +2,7 @@ const africastalking = require("africastalking");
 const { pool } = require("../config/db");
 
 const username = process.env.AT_USERNAME || "sandbox";
-const apiKey = process.env.AT_API_KEY;
+const apiKey = process.env.AT_API_KEY && process.env.AT_API_KEY !== "your_africastalking_api_key" ? process.env.AT_API_KEY : null;
 
 let atClient = null;
 let atSMS = null;
@@ -17,15 +17,34 @@ if (apiKey) {
   }
 } else {
   console.log(
-    `[AgriBackend] AT_API_KEY missing. Africa's Talking SMS runs in Mock Console Log mode.`,
+    `[AgriBackend] AT_API_KEY missing or placeholder. Africa's Talking SMS runs in Mock Console Log mode.`,
   );
+}
+
+function normalizePhoneNumber(phone) {
+  if (!phone) return phone;
+  // Remove all whitespace, dashes, parentheses
+  let cleaned = phone.replace(/[\s\-\(\)]/g, "");
+  
+  // If it starts with 0 and has 10 digits, convert to +233 (Ghana country code)
+  if (/^0\d{9}$/.test(cleaned)) {
+    return "+233" + cleaned.substring(1);
+  }
+  
+  // If it starts with 233 and has 12 digits, convert to +233
+  if (/^233\d{9}$/.test(cleaned)) {
+    return "+" + cleaned;
+  }
+  
+  return cleaned;
 }
 
 async function sendSMS(phoneNumber, message) {
   try {
+    const normalizedPhone = normalizePhoneNumber(phoneNumber);
     if (atSMS) {
       const payload = {
-        to: [phoneNumber],
+        to: [normalizedPhone],
         message: message,
       };
 
@@ -34,11 +53,11 @@ async function sendSMS(phoneNumber, message) {
       }
 
       const response = await atSMS.send(payload);
-      console.log(`[AgriBackend] SMS sent to ${phoneNumber}:`, response);
+      console.log(`[AgriBackend] SMS sent to ${normalizedPhone}:`, response);
       return response;
     } else {
-      console.log(`[MOCK SMS BROADCAST] To: ${phoneNumber} | Msg: "${message}"`);
-      return { status: "mock_success", to: phoneNumber, message };
+      console.log(`[MOCK SMS BROADCAST] To: ${normalizedPhone} | Msg: "${message}"`);
+      return { status: "mock_success", to: normalizedPhone, message };
     }
   } catch (error) {
     console.error(`[AgriBackend] Error sending SMS to ${phoneNumber}:`, error);
@@ -86,8 +105,16 @@ async function broadcastPriceAlerts() {
       }
 
       const msg = `AgriFarm: ${sub.commodity_name} - GHS ${Number(latest.price_ghs).toFixed(2)}/${sub.unit_of_measure} (${latest.market_name}, ${latest.region}). Reply STOP to unsubscribe.`;
-      await sendSMS(sub.phone, msg);
-      count++;
+      
+      try {
+        await sendSMS(sub.phone, msg);
+        count++;
+      } catch (smsErr) {
+        console.error(
+          `[AgriBackend] Failed to send SMS to ${sub.phone} for ${sub.commodity_name}:`,
+          smsErr.message || smsErr,
+        );
+      }
     }
 
     return { success: true, broadcastCount: count };
@@ -98,3 +125,4 @@ async function broadcastPriceAlerts() {
 }
 
 module.exports = { sendSMS, broadcastPriceAlerts };
+
